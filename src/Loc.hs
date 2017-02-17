@@ -30,9 +30,9 @@ countLinesAtPath path = do
 
 countLinesInDirectory :: String -> IO Int
 countLinesInDirectory path = do
-    allFiles <- getDirectoryContents path
+    allFiles <- getFilePaths path
     acceptedFiles <- filterM (\name -> return $ isAcceptedPath name) allFiles
-        >>= mapM (return . (path_++))
+        >>= mapM (return . (toAbsolutePath path))
 
     print $ length allFiles
     print $ length acceptedFiles
@@ -47,7 +47,21 @@ countLinesInDirectory path = do
             if b
                 then countLinesInFile name
                 else countLinesInDirectory name
-        path_ = path ++ "/"
+
+getFilePaths :: FilePath -> IO [FilePath]
+getFilePaths path = do
+    isFile <- doesFileExist path
+    if isFile
+      then return $ [path]
+      else getFilePathsInDirectory path
+
+getFilePathsInDirectory :: FilePath-> IO [FilePath]
+getFilePathsInDirectory path = contents >>= mapM (return . (toAbsolutePath path))
+  where contents = getDirectoryContents path
+
+toAbsolutePath :: FilePath -> FilePath -> FilePath
+toAbsolutePath base other = (base ++ "/" ++ other)
+
 
 isAcceptedPath :: String -> Bool
 isAcceptedPath = isAcceptedExtension . takeExtension
