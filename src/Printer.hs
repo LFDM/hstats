@@ -24,28 +24,18 @@ join = intercalate "\n"
 style :: Int -> String -> String
 style code text = "\ESC[" ++ (show code) ++ "m" ++ text ++ "\ESC[0m"
 
-bold :: String -> String
 bold = style 1
-
-inYellow :: String -> String
 inYellow = style 93
-
-inGreen :: String -> String
 inGreen = style 92
-
-inRed :: String -> String
 inRed = style 91
 
 line :: Int -> String
 line = toLine "-"
 
-line80 :: String
-line80 = line 80
-
 dline :: Int -> String
 dline = toLine "="
 
-dline80 :: String
+line80 = line 80
 dline80 = dline 80
 
 padLeft :: String -> Int -> String -> String
