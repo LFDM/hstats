@@ -12,12 +12,11 @@ import Data.Maybe
 import Data.Time
 import qualified Data.ByteString.Char8 as BS
 
-import System.FilePath (takeExtension)
-
 import Printer as P
 import LineParsers ( ParserDef
                    , ParserDefs
                    , loadParsers
+                   , findParser
                    , isEmptyLine
                    , isSingleLineComment
                    , isMultiLineCommentStart
@@ -86,9 +85,7 @@ countInFile :: ParserDefs -> CounterMap -> FilePath -> IO CounterMap
 countInFile parsers res path = do
   content <- BS.readFile path
   return $ addCounter res $ parseFile parser content
-  where parser = Map.lookup ((extToLang . takeExtension) path) parsers
-        extToLang "" = ""
-        extToLang (_:xs) = xs -- remove the .
+  where parser = findParser parsers path
 
 addCounter :: CounterMap -> Counter -> CounterMap
 addCounter res counter@(lang, _, _, _, _) = Map.insert lang merged res

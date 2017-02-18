@@ -3,6 +3,11 @@
   multiLineStart: "^\\s*\\/\\*"
   multiLineEnd: "\\*\\/"
 
+- lang: "spec.js"
+  singleLine: "^\\s*\\/\\/"
+  multiLineStart: "^\\s*\\/\\*"
+  multiLineEnd: "\\*\\/"
+
 - lang: "json"
 
 - lang: "md"

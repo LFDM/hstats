@@ -4,6 +4,7 @@ module LineParsers (
   ParserDef,
   ParserDefs,
   loadParsers,
+  findParser,
   isEmptyLine,
   isSingleLineComment,
   isMultiLineCommentStart,
@@ -16,6 +17,8 @@ import Data.Map as Map
 import Data.Maybe
 import Data.List as List
 import Control.Applicative
+import System.FilePath (takeBaseName, takeExtension)
+
 
 import qualified Data.Yaml as Y
 import Data.Yaml (FromJSON(..), (.:), (.:?))
@@ -44,6 +47,22 @@ loadParsers = do
   conf <- BS.readFile "./lineParsers.yaml"
   let defs = fromMaybe [] $ (Y.decode conf :: Maybe [ParserDef])
   return $ keyBy lang defs
+
+findParser :: ParserDefs -> FilePath -> Maybe ParserDef
+findParser parsers path = findParserByExtension parsers path ""
+
+findParserByExtension :: ParserDefs -> FilePath -> String -> Maybe ParserDef
+findParserByExtension parsers p ext = recCheck nextExt
+  where nextExt = takeExtension p
+        check next = Map.lookup (extToLang next) parsers
+        recCheck "" = Nothing
+        recCheck e = if isNothing value
+                             then findParserByExtension parsers (takeBaseName p) n
+                             else value
+          where n = e ++ ext
+                value = check n
+        extToLang "" = ""
+        extToLang (_:xs) = xs -- remove the .
 
 keyBy :: (Ord b) => (a -> b) -> [a] -> Map b a
 keyBy toKey = Map.fromList . (List.map toTuple)
