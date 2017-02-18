@@ -22,12 +22,18 @@ data ParserDef = ParserDef { lang :: String
 type ParserDefs = Map String ParserDef
 
 
+-- this would typically also read from a config file, hence the IO monad
 getParsers :: IO ParserDefs
 getParsers = return $ Map.fromList $ List.map (\p -> (lang p, p)) parsers
   where parsers = [ ParserDef { lang="js"
-                              , singleLine="^\\s\\/\\/"
-                              , multiLineStart="\\/\\*"
+                              , singleLine="^\\s*\\/\\/"
+                              , multiLineStart="^\\s*\\/\\*"
                               , multiLineEnd="\\*\\/"
+                              }
+                  , ParserDef { lang="hs"
+                              , singleLine="^\\s*--"
+                              , multiLineStart="^\\s*\\{-"
+                              , multiLineEnd="-}"
                               }
                   ]
 
