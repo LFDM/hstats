@@ -80,13 +80,18 @@ parseFile (Just parser) content = tempToCounter l $ List.foldr (parseLine parser
         acc = (0, 0, 0, False)
         ls = lines content
 
+-- need to recheck if multiline comments can be nested - if they are
+-- we need to count comment openings instead of just flipping a boolean
 parseLine :: ParserDef -> String -> TempCounter -> TempCounter
 parseLine parser line (code, comment, blank, withinComment)
+  -- arguable, empty lines in comments could count as comment too
   | empty = (code, comment, blank + 1, withinComment)
   | single = (code, comment + 1, blank, withinComment)
   | multiStart = (code, comment + 1, blank, not multiEnd)
   | multiEnd = (code, comment + 1, blank, False)
-  | otherwise = (code + 1, comment, blank, False)
+  | otherwise = if withinComment
+                  then (code, comment + 1, blank, withinComment)
+                  else (code + 1, comment, blank, withinComment)
   where empty = isEmptyLine line
         single = isSingleLineComment parser line
         multiStart = isMultiLineCommentStart parser line
