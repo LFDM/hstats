@@ -41,43 +41,13 @@ type ParserDefs = Map String ParserDef
 
 loadParsers :: IO ParserDefs
 loadParsers = do
-  conf <- BS.readFile "./src/lineParsers.yaml"
+  conf <- BS.readFile "./lineParsers.yaml"
   let defs = fromMaybe [] $ (Y.decode conf :: Maybe [ParserDef])
   return $ keyBy lang defs
 
 keyBy :: (Ord b) => (a -> b) -> [a] -> Map b a
 keyBy toKey = Map.fromList . (List.map toTuple)
   where toTuple x = (toKey x, x)
-
--- this would typically also read from a config file, hence the IO monad
-getParsers :: IO ParserDefs
-getParsers = return $ Map.fromList $ List.map (\p -> (lang p, p)) parsers
-  where parsers = [ ParserDef { lang="js"
-                              , singleLine=Just "^\\s*\\/\\/"
-                              , multiLineStart=Just "^\\s*\\/\\*"
-                              , multiLineEnd=Just "\\*\\/"
-                              }
-                  , ParserDef { lang="json"
-                              , singleLine=Nothing
-                              , multiLineStart=Nothing
-                              , multiLineEnd=Nothing
-                              }
-                  , ParserDef { lang="hs"
-                              , singleLine=Just "^\\s*--"
-                              , multiLineStart=Just "^\\s*\\{-"
-                              , multiLineEnd=Just "-}"
-                              }
-                  , ParserDef { lang="yaml"
-                              , singleLine=Just "^\\s*#"
-                              , multiLineStart=Nothing
-                              , multiLineEnd=Nothing
-                              }
-                  , ParserDef { lang="md"
-                              , singleLine=Nothing
-                              , multiLineStart=Just "^\\s*<!--"
-                              , multiLineEnd=Just "-->"
-                              }
-                  ]
 
 getLang :: ParserDef -> String
 getLang = lang

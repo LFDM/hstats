@@ -13,7 +13,7 @@ import System.FilePath (takeExtension)
 
 import LineParsers ( ParserDef
                    , ParserDefs
-                   , getParsers
+                   , loadParsers
                    , isEmptyLine
                    , isSingleLineComment
                    , isMultiLineCommentStart
