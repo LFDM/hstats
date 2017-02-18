@@ -27,57 +27,61 @@ import LineParsers ( ParserDef
 
 type TempCounter = (Int, Int, Int, Bool)
 type Counter = (String, Int, Int, Int, Int)
-
 type CounterMap = Map String Counter
 
-join = intercalate "\n"
+header = ["Langugage", "files", "code", "comment", "blank"]
+dimensions = [20, 12, 12, 12, 12]
+ignoredKeyword = "ignored"
 
 printLineCountsAtPath :: String -> IO ()
 printLineCountsAtPath path = do
   parsers <- loadParsers
   counts <- countAtPaths parsers Map.empty [path]
+
   let ignored = getIgnoredFilesCount counts
-  let realCounts = Map.delete "ignored" counts
-  let total = Map.foldr mergeCounter ("TOTAL", 0, 0, 0, 0) realCounts
-  let rows = (P.join. (List.map (renderRow . counterToStrs)) . values) realCounts
+  let withoutIgnored = Map.delete ignoredKeyword counts
   start <- getCurrentTime
-
-  putStrLn $ P.join [ P.line80
-                     , P.bold $ renderRow ["Langugage", "files", "code", "comment", "blank"]
-                     , P.line80
-                     , rows
-                     , P.line80
-                     , (renderRow . counterToStrs ) total
-                     , P.line80
-                     ]
+  putStrLn $ renderCounts withoutIgnored
   stop <- getCurrentTime
-
-  putStrLn $ unwords [ show ignored
-                   , "file(s) ignored, took"
-                   , show $ diffUTCTime stop start
-                   ]
+  putStrLn $ renderStatus ignored (diffUTCTime stop start)
   return ()
-
-finalizeCounts :: CounterMap -> CounterMap
-finalizeCounts = addTotal . omitIgnore
-  where omitIgnore = Map.delete "ignored"
-        addTotal c = addCounter c (merge c)
-        merge = Map.foldr mergeCounter ("total", 0, 0, 0, 0)
 
 getIgnoredFilesCount :: CounterMap -> Int
 getIgnoredFilesCount c = maybe 0 extractCount ignored
-  where ignored = Map.lookup "ignored" c
+  where ignored = Map.lookup ignoredKeyword c
         extractCount (_, count, _, _, _) = count
 
+renderStatus :: Int -> NominalDiffTime -> String
+renderStatus iF tE =  unwords [ show iF
+                              , "file(s) ignored, took"
+                              , show tE
+                              ]
+
+
+renderCounts :: CounterMap -> String
+renderCounts cm = P.join [ P.line80
+                         , P.bold $ renderRow header
+                         , P.line80
+                         , rows
+                         , P.line80
+                         , (renderRow . counterToStrs ) total
+                         , P.line80
+                         ]
+  where total = Map.foldr mergeCounter ("TOTAL", 0, 0, 0, 0) cm
+        rows = (P.join. (List.map (renderRow . counterToStrs)) . values ) cm
+
+
 renderRow :: [String] -> String
-renderRow = P.toRow [20, 12, 12, 12, 12]
+renderRow = P.toRow dimensions
 
 counterToStrs :: Counter -> [String]
 counterToStrs (lang, f, c, co, b) = [lang, show f, show c, show co, show b]
 
-
 values :: Map k v -> [v]
 values = (List.map snd) . Map.toList
+
+
+
 
 countAtPaths :: ParserDefs -> CounterMap -> [FilePath] -> IO CounterMap
 countAtPaths parsers = foldM (countAtPath parsers)
@@ -107,16 +111,14 @@ mergeCounter :: Counter -> Counter -> Counter
 mergeCounter (_, f1, c1, co1, b1) (lang, f2, c2, co2, b2) =
   (lang, f1 + f2, c1 + c2, co1 + co2, b1 + b2)
 
-
 parseFile :: Maybe ParserDef -> BS.ByteString -> Counter
-parseFile Nothing _ = ("ignored", 1, 0, 0, 0)
+parseFile Nothing _ = (ignoredKeyword, 1, 0, 0, 0)
 parseFile (Just parser) f = toCounter . parseLines . BS.lines $ f
   where toCounter = (tempToCounter . getName) parser
         parseLines = List.foldr (parseLine parser) (0, 0, 0, False)
 
 tempToCounter :: String -> TempCounter -> Counter
 tempToCounter name (code, comment, blank, _) = (name, 1, code, comment, blank)
-
 
 -- need to recheck if multiline commentis can be nested - if they are
 -- we need to count comment openings instead of just flipping a boolean
