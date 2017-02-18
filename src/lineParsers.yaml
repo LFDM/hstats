@@ -2,5 +2,21 @@
   singleLine: "^\\s*\\/\\/"
   multiLineStart: "^\\s*\\/\\*"
   multiLineEnd: "\\*\\/"
+
 - lang: "json"
 
+- lang: "md"
+  multiLineStart: "^\\s*<!--"
+  multiLineEnd: "-->"
+
+- lang: "html"
+  multiLineStart: "^\\s*<!--"
+  multiLineEnd: "-->"
+
+- lang: "yaml"
+  singleLine: "^\\s*--"
+
+- lang: "hs"
+  singleLine: "^\\s*--"
+  multiLineStart: "^\\s*\\{-"
+  multiLineEnd: "-}"
