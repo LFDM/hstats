@@ -6,18 +6,29 @@ import System.Environment
 import System.IO
 import System.Directory
 import Control.Monad
-import Data.List
+import Data.List as List
+import Data.Map as Map
 
 import System.FilePath (takeExtension)
 
-supportedExts = [".js", ".hs", ".yaml"]
+import LineParsers ( ParserDef
+                   , ParserDefs
+                   , getParsers
+                   , isEmptyLine
+                   , isSingleLineComment
+                   , isMultiLineCommentStart
+                   , isMultiLineCommentEnd
+                   , getLang
+                   )
 
-isEmpty :: String -> Bool
-isEmpty x = length x == 0
+type TempCounter = (Int, Int, Int, Bool)
+type Counter = (String, Int, Int, Int, Int)
+
+type CounterMap = Map String Counter
 
 countLinesAtPath  :: String -> IO ()
 countLinesAtPath path = do
-  count <- countLinesInDirectory path
+  count <- countLinesInDir path
   print count
   return ()
 
@@ -26,48 +37,84 @@ countLinesAtPath path = do
 -- create Records for each parserDef - can and shall be read from an additional
 -- file to define custom matchers for filetypes
 -- map over files and create tuples like (filetype, code line, blank line, comment)
--- combine these after wards and render
+-- combine these afterwards and render
 
-countLinesInDirectory :: String -> IO Int
-countLinesInDirectory path = do
-    allFiles <- getFilePaths path
-    acceptedFiles <- filterM (\name -> return $ isAcceptedPath name) allFiles
-        >>= mapM (return . (toAbsolutePath path))
+countLinesInDir :: String -> IO [Counter]
+countLinesInDir path = do
+    parsers <- getParsers
+    counts <- countAtPaths parsers Map.empty [path]
+    return $ values counts
 
-    print $ length allFiles
-    print $ length acceptedFiles
+values :: Map k v -> [v]
+values = (List.map snd) . Map.toList
 
-    print $ diffLength allFiles acceptedFiles
+countAtPaths :: ParserDefs -> CounterMap -> [FilePath] -> IO CounterMap
+countAtPaths parsers = foldM (countAtPath parsers)
 
-    lineCounts <- mapM count acceptedFiles
-    return $ sum lineCounts
-    where
-        count name = do
-            b <- doesFileExist name
-            if b
-                then countLinesInFile name
-                else countLinesInDirectory name
+countAtPath :: ParserDefs -> CounterMap -> FilePath -> IO CounterMap
+countAtPath parsers res path = do
+  isFile <- doesFileExist path
+  if isFile
+    then countInFile parsers res path
+    else getFilePathsInDir path >>= countAtPaths parsers res
 
-getFilePaths :: FilePath -> IO [FilePath]
-getFilePaths path = do
-    isFile <- doesFileExist path
-    if isFile
-      then return $ [path]
-      else getFilePathsInDirectory path
+countInFile :: ParserDefs -> CounterMap -> FilePath -> IO CounterMap
+countInFile parsers res path = do
+  content <- readFile path
+  return $ addCounter res $ parseFile parser content
+  where parser = Map.lookup ((extToLang . takeExtension) path) parsers
 
-getFilePathsInDirectory :: FilePath-> IO [FilePath]
-getFilePathsInDirectory path = contents >>= mapM (return . (toAbsolutePath path))
-  where contents = getDirectoryContents path
+addCounter :: CounterMap -> Counter -> CounterMap
+addCounter res counter@(lang, _, _, _, _) = Map.insert lang merged res
+  where merged = mergeCounter counter $ Map.lookup lang res
+
+mergeCounter :: Counter -> Maybe Counter -> Counter
+mergeCounter (lang, f1, c1, co1, b1) (Just (_, f2, c2, co2, b2)) = (lang, f1 + f2, c1 + c2, co1 + co2, b1 + b2)
+mergeCounter counter Nothing = counter
+
+
+parseFile :: Maybe ParserDef -> String -> Counter
+parseFile Nothing _ = ("ignored", 1, 0, 0, 0)
+parseFile (Just parser) content = tempToCounter l $ List.foldr (parseLine parser) acc ls
+  where l = getLang parser
+        acc = (0, 0, 0, False)
+        ls = lines content
+
+parseLine :: ParserDef -> String -> TempCounter -> TempCounter
+parseLine parser line (code, comment, blank, withinComment)
+  | empty = (code, comment, blank + 1, withinComment)
+  | single = (code, comment + 1, blank, withinComment)
+  | multiStart = (code, comment + 1, blank, not multiEnd)
+  | multiEnd = (code, comment + 1, blank, False)
+  | otherwise = (code + 1, comment, blank, False)
+  where empty = isEmptyLine line
+        single = isSingleLineComment parser line
+        multiStart = isMultiLineCommentStart parser line
+        multiEnd = isMultiLineCommentEnd parser line
+
+tempToCounter :: String -> TempCounter -> Counter
+tempToCounter lang (code, comment, blank, _) = (lang, 1, code, comment, blank)
+
+getFilePathsInDir :: FilePath -> IO [FilePath]
+getFilePathsInDir path = getDirectoryContents path
+  >>= filterM (\name -> return $ name /= ".." && name /= ".")
+  >>= mapM (return . (toAbsolutePath path))
+
+
 
 toAbsolutePath :: FilePath -> FilePath -> FilePath
 toAbsolutePath base other = (base ++ "/" ++ other)
 
 
-isAcceptedPath :: String -> Bool
-isAcceptedPath = isAcceptedExtension . takeExtension
+isAcceptedPath :: [String] -> String -> Bool
+isAcceptedPath langs = (isAcceptedExtension langs) . extToLang . takeExtension
 
-isAcceptedExtension :: String -> Bool
-isAcceptedExtension x = x == "" || x `elem` supportedExts
+extToLang :: String -> String
+extToLang "" = ""
+extToLang (_:xs) = xs -- remove the .
+
+isAcceptedExtension :: [String] -> String  -> Bool
+isAcceptedExtension langs x = x == "" || x `elem` langs
 
 diffLength :: [a] -> [a] -> Int
 diffLength x y = length x - length y
@@ -75,3 +122,4 @@ diffLength x y = length x - length y
 countLinesInFile filename = do
     content <- readFile filename
     return $ length $ lines content
+
