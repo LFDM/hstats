@@ -84,7 +84,7 @@ countAtPath parsers res path = do
 
 countInFile :: ParserDefs -> CounterMap -> FilePath -> IO CounterMap
 countInFile parsers res path = do
-  content <- readFile path
+  content <- BS.readFile path
   return $ addCounter res $ parseFile parser content
   where parser = Map.lookup ((extToLang . takeExtension) path) parsers
         extToLang "" = ""
@@ -102,9 +102,9 @@ mergeCounter :: Counter -> Counter -> Counter
 mergeCounter (_, f1, c1, co1, b1) (lang, f2, c2, co2, b2) = (lang, f1 + f2, c1 + c2, co1 + co2, b1 + b2)
 
 
-parseFile :: Maybe ParserDef -> String -> Counter
+parseFile :: Maybe ParserDef -> BS.ByteString -> Counter
 parseFile Nothing _ = ("ignored", 1, 0, 0, 0)
-parseFile (Just parser) f = toCounter . parseLines . lines $ f
+parseFile (Just parser) f = toCounter . parseLines . BS.lines $ f
   where toCounter = (tempToCounter . getLang) parser
         parseLines = List.foldr (parseLine parser) (0, 0, 0, False)
 
@@ -114,7 +114,7 @@ tempToCounter lang (code, comment, blank, _) = (lang, 1, code, comment, blank)
 
 -- need to recheck if multiline comments can be nested - if they are
 -- we need to count comment openings instead of just flipping a boolean
-parseLine :: ParserDef -> String -> TempCounter -> TempCounter
+parseLine :: ParserDef -> BS.ByteString -> TempCounter -> TempCounter
 parseLine parser line (code, comment, blank, withinComment)
   -- arguable, empty lines in comments could count as comment too
   | empty = (code, comment, blank + 1, withinComment)

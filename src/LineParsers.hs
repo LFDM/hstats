@@ -52,18 +52,18 @@ keyBy toKey = Map.fromList . (List.map toTuple)
 getLang :: ParserDef -> String
 getLang = lang
 
-isEmptyLine :: String -> Bool
-isEmptyLine x = x =~ ("^\\s*$" :: String)
+isEmptyLine :: BS.ByteString -> Bool
+isEmptyLine x = x =~ ("^\\s*$" :: BS.ByteString)
 
-isSingleLineComment :: ParserDef -> String -> Bool
+isSingleLineComment :: ParserDef -> BS.ByteString -> Bool
 isSingleLineComment parser = matchMaybe $ singleLine parser
 
-isMultiLineCommentStart :: ParserDef -> String -> Bool
+isMultiLineCommentStart :: ParserDef -> BS.ByteString -> Bool
 isMultiLineCommentStart parser = matchMaybe $ multiLineStart parser
 
-isMultiLineCommentEnd :: ParserDef -> String -> Bool
+isMultiLineCommentEnd :: ParserDef -> BS.ByteString -> Bool
 isMultiLineCommentEnd parser = matchMaybe $ multiLineEnd parser
 
-matchMaybe :: Maybe RegExp -> String -> Bool
+matchMaybe :: Maybe RegExp -> BS.ByteString-> Bool
 matchMaybe Nothing _ = False
 matchMaybe (Just regexp) line = line =~ regexp
