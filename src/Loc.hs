@@ -1,5 +1,5 @@
 module Loc
-( countLinesAtPath
+( printLineCountsAtPath
 ) where
 
 import System.Environment
@@ -26,24 +26,14 @@ type Counter = (String, Int, Int, Int, Int)
 
 type CounterMap = Map String Counter
 
-countLinesAtPath  :: String -> IO ()
-countLinesAtPath path = do
-  count <- countLinesInDir path
-  print count
+printLineCountsAtPath :: String -> IO ()
+printLineCountsAtPath path = do
+  parsers <- getParsers
+  counts <- countAtPaths parsers Map.empty [path]
+  print $ values counts
   return ()
 
 -- allow paths to files directly, check first if file exists
-
--- create Records for each parserDef - can and shall be read from an additional
--- file to define custom matchers for filetypes
--- map over files and create tuples like (filetype, code line, blank line, comment)
--- combine these afterwards and render
-
-countLinesInDir :: String -> IO [Counter]
-countLinesInDir path = do
-    parsers <- getParsers
-    counts <- countAtPaths parsers Map.empty [path]
-    return $ values counts
 
 values :: Map k v -> [v]
 values = (List.map snd) . Map.toList
@@ -77,10 +67,9 @@ mergeCounter counter Nothing = counter
 
 parseFile :: Maybe ParserDef -> String -> Counter
 parseFile Nothing _ = ("ignored", 1, 0, 0, 0)
-parseFile (Just parser) content = tempToCounter l $ List.foldr (parseLine parser) acc ls
-  where l = getLang parser
-        acc = (0, 0, 0, False)
-        ls = lines content
+parseFile (Just parser) f = toCounter . parseLines . lines $ f
+  where toCounter = (tempToCounter . getLang) parser
+        parseLines = List.foldr (parseLine parser) (0, 0, 0, False)
 
 tempToCounter :: String -> TempCounter -> Counter
 tempToCounter lang (code, comment, blank, _) = (lang, 1, code, comment, blank)
@@ -105,8 +94,9 @@ parseLine parser line (code, comment, blank, withinComment)
 
 getFilePathsInDir :: FilePath -> IO [FilePath]
 getFilePathsInDir path = getDirectoryContents path
-  >>= filterM (\name -> return $ name /= ".." && name /= ".")
-  >>= mapM (return . (toAbsolutePath path))
+  >>= filterM (return . not . isSpecialPath)
+  >>= mapM (return . toAbsolutePath path)
   where toAbsolutePath base other = base ++ "/" ++ other
+        isSpecialPath name = name == ".." || name == "."
 
 
