@@ -9,6 +9,8 @@ import Control.Monad
 import Data.List as List
 import Data.Map as Map
 import Data.Maybe
+import Data.Time
+import qualified Data.ByteString.Char8 as BS
 
 import System.FilePath (takeExtension)
 
@@ -36,13 +38,17 @@ printLineCountsAtPath path = do
   let realCounts = Map.delete "ignored" counts
   let total = Map.foldr mergeCounter ("total", 0, 0, 0, 0) realCounts
   let rows = (unlines . (List.map (renderRow . counterToStrs)) . values) realCounts
+  start <- getCurrentTime
   putStrLn $ unlines [ P.line80
                      , renderRow ["Langugage", "files", "code", "comment", "blank"]
                      , P.line80
                      , rows
                      , P.line80
                      , (renderRow . counterToStrs ) total
+                     , P.line80
                      ]
+  stop <- getCurrentTime
+  putStrLn $ "Took " ++ show (diffUTCTime stop start)
   return ()
 
 finalizeCounts :: CounterMap -> CounterMap
