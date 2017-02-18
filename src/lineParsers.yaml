@@ -10,6 +10,12 @@
   multiLineStart: "^\\s*\\/\\*"
   multiLineEnd: "\\*\\/"
 
+- ext: "coffee"
+  name: "CoffeeScript"
+  singleLine: "^\\s*\\#"
+  multiLineStart: "^\\s*###"
+  multiLineEnd: "###"
+
 - ext: "json"
   name: "JSON"
 
