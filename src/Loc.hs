@@ -29,6 +29,8 @@ type Counter = (String, Int, Int, Int, Int)
 
 type CounterMap = Map String Counter
 
+join = intercalate "\n"
+
 printLineCountsAtPath :: String -> IO ()
 printLineCountsAtPath path = do
   parsers <- loadParsers
@@ -36,9 +38,10 @@ printLineCountsAtPath path = do
   let ignored = getIgnoredFilesCount counts
   let realCounts = Map.delete "ignored" counts
   let total = Map.foldr mergeCounter ("total", 0, 0, 0, 0) realCounts
-  let rows = (unlines . (List.map (renderRow . counterToStrs)) . values) realCounts
+  let rows = (P.join. (List.map (renderRow . counterToStrs)) . values) realCounts
   start <- getCurrentTime
-  putStrLn $ unlines [ P.line80
+
+  putStrLn $ P.join [ P.line80
                      , renderRow ["Langugage", "files", "code", "comment", "blank"]
                      , P.line80
                      , rows

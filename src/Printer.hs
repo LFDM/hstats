@@ -1,5 +1,6 @@
 module Printer
 ( nl
+, join
 , colorize
 , inYellow
 , inGreen
@@ -11,8 +12,13 @@ module Printer
 , toRow
 ) where
 
+import Data.List (intercalate)
+
 nl :: String -> String
 nl str = str ++ "\n"
+
+join :: [String] -> String
+join = intercalate "\n"
 
 colorize :: Int -> String -> String
 colorize code text = "\ESC[" ++ (show code) ++ "m" ++ text ++ "\ESC[0m"
