@@ -28,7 +28,7 @@ type CounterMap = Map String Counter
 
 printLineCountsAtPath :: String -> IO ()
 printLineCountsAtPath path = do
-  parsers <- getParsers
+  parsers <- loadParsers
   counts <- countAtPaths parsers Map.empty [path]
   print $ values counts
   return ()

@@ -20,7 +20,9 @@ library
                        directory,
                        filepath,
                        regex-posix,
-                       containers
+                       containers,
+                       yaml,
+                       bytestring
 
 
   default-language:    Haskell2010

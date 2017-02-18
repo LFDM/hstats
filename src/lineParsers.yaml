@@ -1,0 +1,6 @@
+- lang: "js"
+  singleLine: "^\\s*\\/\\/"
+  multiLineStart: "^\\s*\\/\\*"
+  multiLineEnd: "\\*\\/"
+- lang: "json"
+

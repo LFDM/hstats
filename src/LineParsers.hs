@@ -1,7 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module LineParsers (
   ParserDef,
   ParserDefs,
-  getParsers,
+  loadParsers,
   isEmptyLine,
   isSingleLineComment,
   isMultiLineCommentStart,
@@ -11,7 +13,13 @@ module LineParsers (
 
 import Text.Regex.Posix
 import Data.Map as Map
+import Data.Maybe
 import Data.List as List
+import Control.Applicative
+
+import qualified Data.Yaml as Y
+import Data.Yaml (FromJSON(..), (.:), (.:?))
+import qualified Data.ByteString.Char8 as BS
 
 type RegExp = String
 
@@ -21,8 +29,25 @@ data ParserDef = ParserDef { lang :: String
                            , multiLineEnd :: Maybe RegExp
                            } deriving (Show)
 
+instance FromJSON ParserDef where
+  parseJSON (Y.Object v) =
+    ParserDef <$>
+      v .: "lang" <*>
+      v .:? "singleLine" <*>
+      v .:? "multiLineStart" <*>
+      v .:? "multiLineEnd"
+
 type ParserDefs = Map String ParserDef
 
+loadParsers :: IO ParserDefs
+loadParsers = do
+  conf <- BS.readFile "./src/lineParsers.yaml"
+  let defs = fromMaybe [] $ (Y.decode conf :: Maybe [ParserDef])
+  return $ keyBy lang defs
+
+keyBy :: (Ord b) => (a -> b) -> [a] -> Map b a
+keyBy toKey = Map.fromList . (List.map toTuple)
+  where toTuple x = (toKey x, x)
 
 -- this would typically also read from a config file, hence the IO monad
 getParsers :: IO ParserDefs
@@ -58,7 +83,7 @@ getLang :: ParserDef -> String
 getLang = lang
 
 isEmptyLine :: String -> Bool
-isEmptyLine x = x =~ "^\\s*$"
+isEmptyLine x = x =~ ("^\\s*$" :: String)
 
 isSingleLineComment :: ParserDef -> String -> Bool
 isSingleLineComment parser = matchMaybe $ singleLine parser
