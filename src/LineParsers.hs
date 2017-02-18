@@ -32,6 +32,11 @@ getParsers = return $ Map.fromList $ List.map (\p -> (lang p, p)) parsers
                               , multiLineStart=Just "^\\s*\\/\\*"
                               , multiLineEnd=Just "\\*\\/"
                               }
+                  , ParserDef { lang="json"
+                              , singleLine=Nothing
+                              , multiLineStart=Nothing
+                              , multiLineEnd=Nothing
+                              }
                   , ParserDef { lang="hs"
                               , singleLine=Just "^\\s*--"
                               , multiLineStart=Just "^\\s*\\{-"
