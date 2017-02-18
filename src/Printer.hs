@@ -4,6 +4,8 @@ module Printer
 , inYellow
 , inGreen
 , inRed
+, line
+, line80
 ) where
 
 nl :: String -> String
@@ -20,3 +22,12 @@ inGreen = colorize 92
 
 inRed :: String -> String
 inRed = colorize 91
+
+line :: Int -> String
+line w = concatMap (\ _ -> "=") [0..w]
+
+line80 :: String
+line80 = line 80
+
+
+
