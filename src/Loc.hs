@@ -11,6 +11,7 @@ import Data.Map as Map
 
 import System.FilePath (takeExtension)
 
+import Printer as P
 import LineParsers ( ParserDef
                    , ParserDefs
                    , loadParsers
@@ -30,8 +31,13 @@ printLineCountsAtPath :: String -> IO ()
 printLineCountsAtPath path = do
   parsers <- loadParsers
   counts <- countAtPaths parsers Map.empty [path]
-  print $ values counts
+  putStrLn $ renderCounts counts
   return ()
+
+renderCounts :: CounterMap -> String
+renderCounts = unlines . (List.map (P.toRow dimensions)) . (List.map toStr) . values
+  where dimensions = [20, 12, 12, 12, 12]
+        toStr (lang, f, c, co, b) = [lang, show f, show c, show co, show b]
 
 -- allow paths to files directly, check first if file exists
 
