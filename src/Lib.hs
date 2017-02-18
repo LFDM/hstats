@@ -34,7 +34,8 @@ changes :: Command
 changes = logCmd "changes"
 
 loc :: Command
-loc [] = L.countLinesAtPath "."
+loc [] = L.printLineCountsAtPath "."
+loc (x:xs) = L.printLineCountsAtPath x
 
 
 unknown :: Command
