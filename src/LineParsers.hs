@@ -16,6 +16,7 @@ import Text.Regex.Posix
 import Data.Map as Map
 import Data.Maybe
 import Data.List as List
+import Data.List.Split (splitOn)
 import Control.Applicative
 import System.FilePath (takeBaseName, takeExtension)
 
@@ -49,20 +50,16 @@ loadParsers = do
   return $ keyBy lang defs
 
 findParser :: ParserDefs -> FilePath -> Maybe ParserDef
-findParser parsers path = findParserByExtension parsers path ""
+findParser parsers path = findParserByExtensions parsers $ splitOn "." path
 
-findParserByExtension :: ParserDefs -> FilePath -> String -> Maybe ParserDef
-findParserByExtension parsers p ext = recCheck nextExt
-  where nextExt = takeExtension p
-        check next = Map.lookup (extToLang next) parsers
-        recCheck "" = Nothing
-        recCheck e = if isNothing value
-                             then findParserByExtension parsers (takeBaseName p) n
-                             else value
-          where n = e ++ ext
-                value = check n
-        extToLang "" = ""
-        extToLang (_:xs) = xs -- remove the .
+
+findParserByExtensions :: ParserDefs -> [String] -> Maybe ParserDef
+findParserByExtensions parsers [] = Nothing
+findParserByExtensions parsers (b:[]) = Nothing
+findParserByExtensions parsers (b:exts) =
+  if isNothing value then findParserByExtensions parsers exts else value
+  where value = Map.lookup toExt parsers
+        toExt = intercalate "." exts
 
 keyBy :: (Ord b) => (a -> b) -> [a] -> Map b a
 keyBy toKey = Map.fromList . (List.map toTuple)
