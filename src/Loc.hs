@@ -38,12 +38,12 @@ printLineCountsAtPath path = do
   counts <- countAtPaths parsers Map.empty [path]
   let ignored = getIgnoredFilesCount counts
   let realCounts = Map.delete "ignored" counts
-  let total = Map.foldr mergeCounter ("total", 0, 0, 0, 0) realCounts
+  let total = Map.foldr mergeCounter ("TOTAL", 0, 0, 0, 0) realCounts
   let rows = (P.join. (List.map (renderRow . counterToStrs)) . values) realCounts
   start <- getCurrentTime
 
   putStrLn $ P.join [ P.line80
-                     , renderRow ["Langugage", "files", "code", "comment", "blank"]
+                     , P.bold $ renderRow ["Langugage", "files", "code", "comment", "blank"]
                      , P.line80
                      , rows
                      , P.line80

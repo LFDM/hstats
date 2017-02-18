@@ -1,7 +1,8 @@
 module Printer
 ( nl
 , join
-, colorize
+, style
+, bold
 , inYellow
 , inGreen
 , inRed
@@ -20,17 +21,20 @@ nl str = str ++ "\n"
 join :: [String] -> String
 join = intercalate "\n"
 
-colorize :: Int -> String -> String
-colorize code text = "\ESC[" ++ (show code) ++ "m" ++ text ++ "\ESC[0m"
+style :: Int -> String -> String
+style code text = "\ESC[" ++ (show code) ++ "m" ++ text ++ "\ESC[0m"
+
+bold :: String -> String
+bold = style 1
 
 inYellow :: String -> String
-inYellow = colorize 93
+inYellow = style 93
 
 inGreen :: String -> String
-inGreen = colorize 92
+inGreen = style 92
 
 inRed :: String -> String
-inRed = colorize 91
+inRed = style 91
 
 line :: Int -> String
 line = toLine "-"
