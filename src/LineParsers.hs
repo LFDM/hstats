@@ -42,6 +42,11 @@ getParsers = return $ Map.fromList $ List.map (\p -> (lang p, p)) parsers
                               , multiLineStart=Nothing
                               , multiLineEnd=Nothing
                               }
+                  , ParserDef { lang="md"
+                              , singleLine=Nothing
+                              , multiLineStart=Just "^\\s*<!--"
+                              , multiLineEnd=Just "-->"
+                              }
                   ]
 
 getLang :: ParserDef -> String
