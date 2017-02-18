@@ -13,6 +13,10 @@
 - ext: "json"
   name: "JSON"
 
+- ext: "yaml"
+  name: "YAML"
+  singleLine: "^\\s*--"
+
 - ext: "md"
   name: "Markdown"
   multiLineStart: "^\\s*<!--"
@@ -23,9 +27,22 @@
   multiLineStart: "^\\s*<!--"
   multiLineEnd: "-->"
 
-- ext: "yaml"
-  name: "YAML"
-  singleLine: "^\\s*--"
+- ext: "less"
+  name: "LESS"
+  singleLine: "^\\s*\\/\\/"
+  multiLineStart: "^\\s*\\/\\*"
+  multiLineEnd: "\\*\\/"
+
+- ext: "scss"
+  name: "SCSS"
+  singleLine: "^\\s*\\/\\/"
+  multiLineStart: "^\\s*\\/\\*"
+  multiLineEnd: "\\*\\/"
+
+- ext: "css"
+  name: "CSS"
+  multiLineStart: "^\\s*\\/\\*"
+  multiLineEnd: "\\*\\/"
 
 - ext: "hs"
   name: "Haskell"
