@@ -63,6 +63,8 @@ countInFile parsers res path = do
   content <- readFile path
   return $ addCounter res $ parseFile parser content
   where parser = Map.lookup ((extToLang . takeExtension) path) parsers
+        extToLang "" = ""
+        extToLang (_:xs) = xs -- remove the .
 
 addCounter :: CounterMap -> Counter -> CounterMap
 addCounter res counter@(lang, _, _, _, _) = Map.insert lang merged res
@@ -79,6 +81,10 @@ parseFile (Just parser) content = tempToCounter l $ List.foldr (parseLine parser
   where l = getLang parser
         acc = (0, 0, 0, False)
         ls = lines content
+
+tempToCounter :: String -> TempCounter -> Counter
+tempToCounter lang (code, comment, blank, _) = (lang, 1, code, comment, blank)
+
 
 -- need to recheck if multiline comments can be nested - if they are
 -- we need to count comment openings instead of just flipping a boolean
@@ -97,34 +103,10 @@ parseLine parser line (code, comment, blank, withinComment)
         multiStart = isMultiLineCommentStart parser line
         multiEnd = isMultiLineCommentEnd parser line
 
-tempToCounter :: String -> TempCounter -> Counter
-tempToCounter lang (code, comment, blank, _) = (lang, 1, code, comment, blank)
-
 getFilePathsInDir :: FilePath -> IO [FilePath]
 getFilePathsInDir path = getDirectoryContents path
   >>= filterM (\name -> return $ name /= ".." && name /= ".")
   >>= mapM (return . (toAbsolutePath path))
+  where toAbsolutePath base other = base ++ "/" ++ other
 
-
-
-toAbsolutePath :: FilePath -> FilePath -> FilePath
-toAbsolutePath base other = (base ++ "/" ++ other)
-
-
-isAcceptedPath :: [String] -> String -> Bool
-isAcceptedPath langs = (isAcceptedExtension langs) . extToLang . takeExtension
-
-extToLang :: String -> String
-extToLang "" = ""
-extToLang (_:xs) = xs -- remove the .
-
-isAcceptedExtension :: [String] -> String  -> Bool
-isAcceptedExtension langs x = x == "" || x `elem` langs
-
-diffLength :: [a] -> [a] -> Int
-diffLength x y = length x - length y
-
-countLinesInFile filename = do
-    content <- readFile filename
-    return $ length $ lines content
 
