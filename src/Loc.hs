@@ -21,7 +21,8 @@ import LineParsers ( ParserDef
                    , isSingleLineComment
                    , isMultiLineCommentStart
                    , isMultiLineCommentEnd
-                   , getLang
+                   , getName
+                   , getExt
                    )
 
 type TempCounter = (Int, Int, Int, Bool)
@@ -105,11 +106,11 @@ mergeCounter (_, f1, c1, co1, b1) (lang, f2, c2, co2, b2) = (lang, f1 + f2, c1 +
 parseFile :: Maybe ParserDef -> BS.ByteString -> Counter
 parseFile Nothing _ = ("ignored", 1, 0, 0, 0)
 parseFile (Just parser) f = toCounter . parseLines . BS.lines $ f
-  where toCounter = (tempToCounter . getLang) parser
+  where toCounter = (tempToCounter . getName) parser
         parseLines = List.foldr (parseLine parser) (0, 0, 0, False)
 
 tempToCounter :: String -> TempCounter -> Counter
-tempToCounter lang (code, comment, blank, _) = (lang, 1, code, comment, blank)
+tempToCounter name (code, comment, blank, _) = (name, 1, code, comment, blank)
 
 
 -- need to recheck if multiline comments can be nested - if they are
