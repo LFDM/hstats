@@ -51,7 +51,11 @@ printLineCountsAtPath path = do
                      , P.line80
                      ]
   stop <- getCurrentTime
-  putStrLn $ "Took " ++ show (diffUTCTime stop start)
+
+  putStrLn $ unwords [ show ignored
+                   , "file(s) ignored, took"
+                   , show $ diffUTCTime stop start
+                   ]
   return ()
 
 finalizeCounts :: CounterMap -> CounterMap
@@ -100,7 +104,8 @@ maybeMergeCounter counter (Just other) = mergeCounter counter other
 maybeMergeCounter counter Nothing = counter
 
 mergeCounter :: Counter -> Counter -> Counter
-mergeCounter (_, f1, c1, co1, b1) (lang, f2, c2, co2, b2) = (lang, f1 + f2, c1 + c2, co1 + co2, b1 + b2)
+mergeCounter (_, f1, c1, co1, b1) (lang, f2, c2, co2, b2) =
+  (lang, f1 + f2, c1 + c2, co1 + co2, b1 + b2)
 
 
 parseFile :: Maybe ParserDef -> BS.ByteString -> Counter
@@ -113,7 +118,7 @@ tempToCounter :: String -> TempCounter -> Counter
 tempToCounter name (code, comment, blank, _) = (name, 1, code, comment, blank)
 
 
--- need to recheck if multiline comments can be nested - if they are
+-- need to recheck if multiline commentis can be nested - if they are
 -- we need to count comment openings instead of just flipping a boolean
 parseLine :: ParserDef -> BS.ByteString -> TempCounter -> TempCounter
 parseLine parser line (code, comment, blank, withinComment)
