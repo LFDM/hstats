@@ -8,6 +8,7 @@ import System.Directory
 import Control.Monad
 import Data.List as List
 import Data.Map as Map
+import Data.Maybe
 
 import System.FilePath (takeExtension)
 
@@ -31,15 +32,36 @@ printLineCountsAtPath :: String -> IO ()
 printLineCountsAtPath path = do
   parsers <- loadParsers
   counts <- countAtPaths parsers Map.empty [path]
-  putStrLn $ renderCounts counts
+  let ignored = getIgnoredFilesCount counts
+  let realCounts = Map.delete "ignored" counts
+  let total = Map.foldr mergeCounter ("total", 0, 0, 0, 0) realCounts
+  let rows = (unlines . (List.map (renderRow . counterToStrs)) . values) realCounts
+  putStrLn $ unlines [ P.line80
+                     , renderRow ["Langugage", "files", "code", "comment", "blank"]
+                     , P.line80
+                     , rows
+                     , P.line80
+                     , (renderRow . counterToStrs ) total
+                     ]
   return ()
 
-renderCounts :: CounterMap -> String
-renderCounts = unlines . (List.map (P.toRow dimensions)) . (List.map toStr) . values
-  where dimensions = [20, 12, 12, 12, 12]
-        toStr (lang, f, c, co, b) = [lang, show f, show c, show co, show b]
+finalizeCounts :: CounterMap -> CounterMap
+finalizeCounts = addTotal . omitIgnore
+  where omitIgnore = Map.delete "ignored"
+        addTotal c = addCounter c (merge c)
+        merge = Map.foldr mergeCounter ("total", 0, 0, 0, 0)
 
--- allow paths to files directly, check first if file exists
+getIgnoredFilesCount :: CounterMap -> Int
+getIgnoredFilesCount c = maybe 0 extractCount ignored
+  where ignored = Map.lookup "ignored" c
+        extractCount (_, count, _, _, _) = count
+
+renderRow :: [String] -> String
+renderRow = P.toRow [20, 12, 12, 12, 12]
+
+counterToStrs :: Counter -> [String]
+counterToStrs (lang, f, c, co, b) = [lang, show f, show c, show co, show b]
+
 
 values :: Map k v -> [v]
 values = (List.map snd) . Map.toList
@@ -64,11 +86,14 @@ countInFile parsers res path = do
 
 addCounter :: CounterMap -> Counter -> CounterMap
 addCounter res counter@(lang, _, _, _, _) = Map.insert lang merged res
-  where merged = mergeCounter counter $ Map.lookup lang res
+  where merged = maybeMergeCounter counter $ Map.lookup lang res
 
-mergeCounter :: Counter -> Maybe Counter -> Counter
-mergeCounter (lang, f1, c1, co1, b1) (Just (_, f2, c2, co2, b2)) = (lang, f1 + f2, c1 + c2, co1 + co2, b1 + b2)
-mergeCounter counter Nothing = counter
+maybeMergeCounter :: Counter -> Maybe Counter -> Counter
+maybeMergeCounter counter (Just other) = mergeCounter counter other
+maybeMergeCounter counter Nothing = counter
+
+mergeCounter :: Counter -> Counter -> Counter
+mergeCounter (_, f1, c1, co1, b1) (lang, f2, c2, co2, b2) = (lang, f1 + f2, c1 + c2, co1 + co2, b1 + b2)
 
 
 parseFile :: Maybe ParserDef -> String -> Counter
