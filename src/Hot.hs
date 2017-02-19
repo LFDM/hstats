@@ -4,8 +4,10 @@ module Hot
 ( printStats
 ) where
 
+import Data.Function
 import Data.Maybe
 import Data.Map as Map
+import Data.List as List
 import System.Process
 import System.IO
 import Text.Regex.Posix
@@ -35,7 +37,17 @@ printStats timeframe = do
   gitOutput <- gitLog timeframe
   let commits = parseGitOutput gitOutput
   let contributors = collectContributors commits
-  print $ getContributorStats (contributors!!0)
+  putStrLn $ P.join . toCommitterPanel . toPanelArgs $ contributors
+  return ()
+
+  where toPanelArgs = List.map contributorToStatLine . take 5 . sortByCommits
+
+
+toCommitterPanel :: [[String]] -> [String]
+toCommitterPanel rows = P.toPanel dimensions (header:rows)
+  where dimensions = [40, 6, 6, 8, 8]
+        header = ["Top Committers", "Com", "Files", "+", "-"]
+
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines
@@ -81,7 +93,6 @@ processStat x ns l = if Prelude.null match then flushState x else addStat x (mat
         addStat (_, (sha, author, date, fs), r) (_:a:d:p:_) =
           (ns, (sha, author, date, (createFileStat a d p):fs), r)
 
-
 collectContributors :: [Commit] -> [Contributor]
 collectContributors = values . (Prelude.foldr collectContribFromCommit Map.empty)
 
@@ -92,4 +103,8 @@ collectContribFromCommit com res = Map.insert author nextContrib res
 
 getContributor :: String -> Map String Contributor -> Contributor
 getContributor author cs = fromMaybe (createContributor author) (Map.lookup author cs)
+
+sortByCommits :: [Contributor] -> [Contributor]
+sortByCommits = List.sortBy ((flip compare) `on` (commitCount . getContributorStats))
+  where commitCount (c, _, _, _) = c
 

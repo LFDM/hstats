@@ -10,7 +10,13 @@ module Printer
 , line80
 , dline
 , dline80
+, padLeft
+, padRight
+, padLeftS
+, padRightS
 , toRow
+, toRowF
+, toPanel
 ) where
 
 import Data.List (intercalate)
@@ -46,6 +52,9 @@ padRight :: String -> Int -> String -> String
 padRight padder width str = str ++ (toLine padder rest)
   where rest = width - length str
 
+padLeftS = padLeft " "
+padRightS = padRight " "
+
 toLine :: String -> Int -> String
 toLine c w = concatMap (\ _ -> c) [0..w]
 
@@ -53,6 +62,24 @@ toRow :: [Int] -> [String] -> String
 toRow x y = concatMap spaceOut tuple
   where spaceOut (w, c) = padRight " " w c
         tuple = zip x y
+
+toRowF :: [String -> String] -> [String] -> String
+toRowF x y = concatMap apply $ zip x y
+  where apply (f, i) = f i
+
+toPanel :: [Int] -> [[String]] -> [String]
+toPanel dim (header:rows) = concat [intro, outro]
+  where intro = [toRowF (applyDim dim hF) header, line (sum dim)]
+        outro = map (toRowF (applyDim dim rF)) rows
+        hF = padRightS:map (\_ -> padLeftS) [0..((length header) - 1)]
+        rF = padRightS:map (\_ -> padLeftS) [0..((length header) - 1)]
+
+applyDim :: [Int] -> [Int -> String -> String] -> [String -> String]
+applyDim a b = map apply $ zip b a
+  where apply (f, d) = f d
+
+
+
 
 
 

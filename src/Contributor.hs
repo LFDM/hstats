@@ -4,6 +4,7 @@ module Contributor
 , createContributor
 , addCommitToContributor
 , getContributorStats
+, contributorToStatLine
 ) where
 
 import Commit
@@ -36,5 +37,8 @@ addCommitToContributor com c = Contributor {name=author, stats=stats, commits=co
         updateStats (c, f1, a1, d1) (f2, a2, d2) = (c + 1, f1 + f2, a1 +  a2, d1 + d2)
         updateFS (a2, d2) (f1, a1, d1) = (f1 + 1, a1 + a2, d1 + d2)
 
+contributorToStatLine :: Contributor -> [String]
+contributorToStatLine c = (name c):((toStats . stats) c)
+  where toStats (a, b, c, d) = map show [a, b, c, d]
 
 
