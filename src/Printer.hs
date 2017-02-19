@@ -64,17 +64,32 @@ toRow x y = concatMap spaceOut tuple
         tuple = zip x y
 
 toRowF :: [String -> String] -> [String] -> String
-toRowF x y = concatMap apply $ zip x y
+toRowF fs r = concat $ toRowFRaw fs r
+
+toRowFRaw :: [String -> String] -> [String] -> [String]
+toRowFRaw x y = map apply $ zip x y
   where apply (f, i) = f i
 
 toPanel :: [Int] -> [[String]] -> [String]
 toPanel dim (header:rows) = concat [intro, outro]
-  where intro = [toRowF (applyDim dim hF) header, line (sum dim)]
-        outro = map (toRowF (applyDim dim rF)) rows
-        hF = padRightS:map (\_ -> padLeftS) [0..((length header) - 1)]
-        rF = padRightS:map (\_ -> padLeftS) [0..((length header) - 1)]
+  where intro = [toPanelHeader dim header, line (sum dim)]
+        outro = map (toPanelRow dim) rows
 
-applyDim :: [Int] -> [Int -> String -> String] -> [String -> String]
+toPanelHeader :: [Int] -> [String] -> String
+toPanelHeader dim header = concat . firstBold $ toPanelRowRaw dim header
+  where firstBold (x:xs) = bold x:xs
+
+toPanelRow :: [Int] -> [String] -> String
+toPanelRow d r = concat $ toPanelRowRaw d r
+
+toPanelRowRaw :: [Int] -> [String] -> [String]
+toPanelRowRaw dim row = toRowFRaw (applyDim dim fs) row
+  where fs = getPanelRowFormatter . length $ row
+
+getPanelRowFormatter :: Int -> [Int -> String -> String]
+getPanelRowFormatter i = padRightS:map (\_ -> padLeftS) [0..(i - 1)]
+
+applyDim :: [a] -> [a -> b -> b] -> [b -> b]
 applyDim a b = map apply $ zip b a
   where apply (f, d) = f d
 
