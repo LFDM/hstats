@@ -7,7 +7,8 @@ import System.IO
 import Data.List
 import Data.Maybe
 import Printer
-import Loc as L
+import Loc as Loc
+import Hot as Hot
 
 type Command = [String] -> IO ()
 
@@ -15,6 +16,7 @@ commandList :: [(String, Command)]
 commandList = [ ("help", help)
               , ("changes", changes)
               , ("loc", loc)
+              , ("hot", hot)
               ]
 
 findCommand :: String -> Command
@@ -34,8 +36,12 @@ changes :: Command
 changes = logCmd "changes"
 
 loc :: Command
-loc [] = L.printLineCountsAtPath "."
-loc (x:xs) = L.printLineCountsAtPath x
+loc [] = Loc.printLineCountsAtPath "."
+loc (x:xs) = Loc.printLineCountsAtPath x
+
+hot :: Command
+hot [] = Hot.printStats "1-week"
+hot (x:xs) = Hot.printStats x
 
 
 unknown :: Command
