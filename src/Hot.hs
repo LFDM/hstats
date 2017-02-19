@@ -78,11 +78,11 @@ processAuthor (s, (sha, _, date, fs), r) ns l = (ns, (sha, author, date, fs), r)
 
 processDate :: GitState -> State -> Line -> GitState
 processDate (s, (sha, author, _, fs), r) ns l = (ns, (sha, author, date, fs), r)
-  where date = (l =~ "^Date: (.+)")!!0!!1
+  where date = (l =~ "^Date:   (.+)")!!0!!1
 
 processStatBegin :: GitState -> State -> Line -> GitState
 processStatBegin x ns l = if startsEmpty then x else processStat x ns l
-  where startsEmpty = l =~ "^\\s" :: Bool
+  where startsEmpty = null l || l =~ "^\\s+" :: Bool
 
 processStat :: GitState -> State -> Line -> GitState
 processStat x ns l = if null match then flushState x else addStat x (match!!0)
