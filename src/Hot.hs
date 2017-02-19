@@ -8,6 +8,7 @@ import Data.Function
 import Data.Maybe
 import Data.Map as Map
 import Data.List as List
+import Data.Time
 import System.Process
 import System.IO
 import Text.Regex.Posix
@@ -34,10 +35,14 @@ gitLog timeframe = readProcess cmd args []
 
 printStats :: String -> IO ()
 printStats timeframe = do
+  start <- getCurrentTime
   gitOutput <- gitLog timeframe
   let commits = parseGitOutput gitOutput
   let contributors = collectContributors commits
   putStrLn $ P.join . toCommitterPanel . toPanelArgs $ contributors
+  stop <- getCurrentTime
+  putStrLn ""
+  putStrLn $ "Took " ++ show (diffUTCTime stop start)
   return ()
 
   where toPanelArgs = List.map contributorToStatLine . take 5 . sortByCommits
@@ -107,4 +112,3 @@ getContributor author cs = fromMaybe (createContributor author) (Map.lookup auth
 sortByCommits :: [Contributor] -> [Contributor]
 sortByCommits = List.sortBy ((flip compare) `on` (commitCount . getContributorStats))
   where commitCount (c, _, _, _) = c
-
