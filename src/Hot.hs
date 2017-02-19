@@ -45,7 +45,7 @@ printStats timeframe = do
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
   return ()
 
-  where toPanelArgs = List.map contributorToStatLine . take 5 . sortByCommits
+  where toPanelArgs = List.map contributorToStatLine . take 10 . sortByCommits
 
 
 toCommitterPanel :: [[String]] -> [String]
