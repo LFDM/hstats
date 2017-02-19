@@ -46,6 +46,8 @@ extra-deps:
   - containers-0.5.7.1
   - yaml-0.8.21.2
   - bytestring-0.10.8.1
+  - split-0.2.3.1
+  - time-1.6.0.1
 
 # Override default flag values for local packages and extra-deps
 flags: {}

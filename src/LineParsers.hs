@@ -21,6 +21,8 @@ import Data.List.Split (splitOn)
 import Control.Applicative
 import System.FilePath (takeBaseName, takeExtension)
 
+import Paths_hstats
+
 
 import qualified Data.Yaml as Y
 import Data.Yaml (FromJSON(..), (.:), (.:?))
@@ -48,7 +50,7 @@ type ParserDefs = Map String ParserDef
 
 loadParsers :: IO ParserDefs
 loadParsers = do
-  conf <- BS.readFile "./lineParsers.yaml"
+  conf <- getDataFileName "data/lineParsers.yaml" >>= BS.readFile
   let defs = fromMaybe [] $ (Y.decode conf :: Maybe [ParserDef])
   return $ keyBy ext defs
 

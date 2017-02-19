@@ -1,7 +1,7 @@
 name:                hstats
 version:             0.1.0.0
--- synopsis:
--- description:
+synopsis:            CLI tool for code stats, written in Haskell
+description:         CLI tool for code stats, written in Haskell
 homepage:            https://github.com/githubuser/hstats#readme
 license:             BSD3
 license-file:        LICENSE
@@ -11,18 +11,40 @@ copyright:           2017 Author name here
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
+data-files:          data/lineParsers.yaml
 cabal-version:       >=1.10
 
-library
+executable hstats
   hs-source-dirs:      src
-  exposed-modules:     Lib
+  main-is:             Main.hs
   build-depends:       base >= 4.7 && < 5,
                        directory,
                        filepath,
                        regex-posix,
                        containers,
                        yaml,
-                       bytestring
+                       bytestring,
+                       split,
+                       time
+
+
+  default-language:    Haskell2010
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Lib
+  other-modules:       Loc,
+                       Printer,
+                       LineParsers
+  build-depends:       base >= 4.7 && < 5,
+                       directory,
+                       filepath,
+                       regex-posix,
+                       containers,
+                       yaml,
+                       bytestring,
+                       split,
+                       time
 
 
   default-language:    Haskell2010
