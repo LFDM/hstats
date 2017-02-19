@@ -56,7 +56,7 @@ padLeftS = padLeft " "
 padRightS = padRight " "
 
 toLine :: String -> Int -> String
-toLine c w = concatMap (\ _ -> c) [0..w]
+toLine c w = concatMap (\ _ -> c) [0..(w - 1)]
 
 toRow :: [Int] -> [String] -> String
 toRow x y = concatMap spaceOut tuple
