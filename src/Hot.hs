@@ -18,7 +18,7 @@ import Contributor
 import Commit
 
 import Printer as P
-import Util (values)
+import Util (removeUnicode, values)
 
 
 type GitLineData = (String, String, String, [FileStat])
@@ -85,7 +85,7 @@ processAuthor :: GitState -> State -> Line -> GitState
 processAuthor a@(s, (sha, _, date, fs), r) ns l =
   -- this line can indicate a merge commit - we ignore these!
   if Prelude.null match then a else (ns, (sha, match!!0!!1, date, fs), r)
-  where match = (l =~ "^Author:.+<(.+)>")
+  where match = (removeUnicode l) =~ "^Author:.*<(.+)>"
 
 processDate :: GitState -> State -> Line -> GitState
 processDate (s, (sha, author, _, fs), r) ns l = (ns, (sha, author, date, fs), r)
