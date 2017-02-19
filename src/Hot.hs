@@ -45,13 +45,16 @@ printStats timeframe = do
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
   return ()
 
-  where toPanelArgs = List.map contributorToStatLine . take 10 . sortByCommits
+  where toPanelArgs = List.map (addDiff . contributorToStatLine) . take 10 . sortByCommits
+        withDiff = List.map addDiff
+        addDiff x@(_:_:_:a:d:_) = x ++ [show (toInt a - toInt d)]
+        toInt s = read s :: Int
 
 
 toCommitterPanel :: [[String]] -> [String]
 toCommitterPanel rows = P.toPanel dimensions (header:rows)
-  where dimensions = [40, 6, 6, 8, 8]
-        header = ["Top Committers", "Com", "Files", "+", "-"]
+  where dimensions = [40, 6, 6, 8, 8, 8]
+        header = ["Top Committers", "Com", "Files", "+", "-", "+/-"]
 
 
 parseGitOutput :: String -> [Commit]
