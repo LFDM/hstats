@@ -12,6 +12,7 @@ import Data.Maybe
 import Data.Time
 import qualified Data.ByteString.Char8 as BS
 
+import Util (values)
 import Printer as P
 import LineParsers ( ParserDef
                    , ParserDefs
@@ -77,8 +78,6 @@ renderRow = P.toRow dimensions
 counterToStrs :: Counter -> [String]
 counterToStrs (lang, f, c, co, b) = [lang, show f, show c, show co, show b]
 
-values :: Map k v -> [v]
-values = (List.map snd) . Map.toList
 
 
 
