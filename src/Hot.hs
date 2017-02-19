@@ -74,7 +74,7 @@ processCommit a@(s, (_, author, date, fs), r) ns l =
 
 processAuthor :: GitState -> State -> Line -> GitState
 processAuthor (s, (sha, _, date, fs), r) ns l = (ns, (sha, author, date, fs), r)
-  where author = (l =~ "^Author: (.+)")!!0!!1
+  where author = (l =~ "^Author:.+<(.+)>")!!0!!1
 
 processDate :: GitState -> State -> Line -> GitState
 processDate (s, (sha, author, _, fs), r) ns l = (ns, (sha, author, date, fs), r)
