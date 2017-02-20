@@ -11,7 +11,10 @@ data Commit = Commit { author :: String
                      , sha :: String
                      , date :: String
                      , files :: [FileStat]
-                     } deriving (Show)
+                     } deriving (Show, Eq)
+
+instance Eq Commit where
+  x == y = (==) `on` sha
 
 createCommit :: String -> String -> String -> [FileStat] -> Commit
 createCommit sha author date files = Commit { sha=sha
