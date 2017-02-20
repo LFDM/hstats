@@ -83,8 +83,8 @@ toComPanelArgs = List.map contributorToStatLine . take 15 . sortContribsByCommit
 
 toFilesPanel :: [[String]] -> [String]
 toFilesPanel rows = P.toPanel dimensions (header:rows)
-  where dimensions = [64, 6, 6, 8, 8, 8]
-        header = ["Top Files", "Com", "Auth", "+", "-", "+/-"]
+  where dimensions = [64, 6, 6, 8, 8, 8, 6, 6, 6]
+        header = ["Top Files", "Com", "Auth", "+", "-", "+/-", "~+", "~-", "~+/-"]
 
 toFPanelArgs :: String -> [GitFile]-> [[String]]
 toFPanelArgs dir = List.map toStatLine . take 15 . sortGitFilesByCommits

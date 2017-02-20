@@ -46,4 +46,5 @@ getGitFileStats f = (com f, auth f, additions f, deletions f)
 
 gitFileToStatLine :: GitFile -> [String]
 gitFileToStatLine f = (path f):(toStats (getGitFileStats f))
-  where toStats (a, b, c, d) = map show [a, b, c, d,  c - d]
+  where toStats (a, b, c, d) = map show [a, b, c, d,  c - d, avg a c, avg a d, avg a (c - d)]
+        avg x y = y `quot` x
