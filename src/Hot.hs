@@ -75,8 +75,8 @@ printStats timeframe dir accuracy = do
 
 toCommitterPanel :: [[String]] -> [String]
 toCommitterPanel rows = P.toPanel dimensions (header:rows)
-  where dimensions = [filePanelPathLen, 6, 6, 8, 8, 8]
-        header = ["Top Committers", "Com", "Files", "+", "-", "+/-"]
+  where dimensions = [filePanelPathLen, 6, 6, 8, 8, 8, 6, 6, 6]
+        header = ["Top Committers", "Com", "Files", "+", "-", "+/-", "~+", "~-", "~+/-"]
 
 toComPanelArgs :: [Contributor] -> [[String]]
 toComPanelArgs = List.map contributorToStatLine . take 15 . sortContribsByCommits
