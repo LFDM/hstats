@@ -32,22 +32,28 @@ filePanelPathLen = 44
 
 emptyLineData = ("", "", "", [])
 
-gitLog :: String -> String -> IO String
-gitLog timeframe dir = readProcess cmd (concat [args, path]) []
+gitLog :: String -> String -> String -> IO String
+gitLog timeframe dir accuracy = readProcess cmd (concat [args, path]) []
   where cmd = "git"
         path = if Prelude.null dir then [] else ["--", dir]
-        args = ["log", "--numstat", "--no-color", "--since=" ++ timeframe] ++ path
+        args = [ "log"
+               , "--numstat"
+               , "-M" ++ accuracy
+               , "-C" ++ accuracy
+               , "--no-color"
+               , "--since=" ++ timeframe
+               ] ++ path
 
 gitRoot :: IO String
 gitRoot = readProcess cmd args []
   where cmd = "git"
-        args = ["rev-parse", "--show-prefix"]
+        args = [ "rev-parse", "--show-prefix"]
 
 
-printStats :: String -> String -> IO ()
-printStats timeframe dir = do
+printStats :: String -> String -> String -> IO ()
+printStats timeframe dir accuracy = do
   start <- getCurrentTime
-  gitOutput <- gitLog timeframe dir
+  gitOutput <- gitLog timeframe dir accuracy
   rootDir <- gitRoot
   let fullDir = combine (trimR rootDir) dir
   putStrLn $ unwords ["Analyzing commits in", fullDir]

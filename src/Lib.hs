@@ -40,9 +40,10 @@ loc [] = Loc.printLineCountsAtPath "."
 loc (x:xs) = Loc.printLineCountsAtPath x
 
 hot :: Command
-hot [] = Hot.printStats "1-week" ""
-hot (x:[]) = Hot.printStats x ""
-hot (x:y:[]) = Hot.printStats x y
+hot [] = Hot.printStats "1-week" "" ""
+hot (x:[]) = Hot.printStats x "" ""
+hot (x:y:[]) = Hot.printStats x y ""
+hot (x:y:z:[]) = Hot.printStats x y z
 
 
 unknown :: Command
