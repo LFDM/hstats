@@ -52,18 +52,18 @@ printStats timeframe = do
   return ()
 
   where toComPanelArgs = List.map contributorToStatLine . take 10 . sortContribsByCommits
-        toFPanelArgs = List.map gitFileToStatLine . take 15 . sortGitFilesByCommits
+        toFPanelArgs = List.map (gitFileToStatLineShort 50) . take 15 . sortGitFilesByCommits
 
 
 toCommitterPanel :: [[String]] -> [String]
 toCommitterPanel rows = P.toPanel dimensions (header:rows)
-  where dimensions = [40, 6, 6, 8, 8, 8]
+  where dimensions = [44, 6, 6, 8, 8, 8]
         header = ["Top Committers", "Com", "Files", "+", "-", "+/-"]
 
 toFilesPanel :: [[String]] -> [String]
 toFilesPanel rows = P.toPanel dimensions (header:rows)
-  where dimensions = [50, 6, 8, 8, 8]
-        header = ["Top Files", "Com", "+", "-", "+/-"]
+  where dimensions = [44, 6, 6, 8, 8, 8]
+        header = ["Top Files", "Com", "Auth", "+", "-", "+/-"]
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines
