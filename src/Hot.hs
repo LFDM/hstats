@@ -28,7 +28,7 @@ type State = String
 type GitState = (State, GitLineData, [Commit])
 type Line = String
 
-filePanelPathLen = 44
+filePanelPathLen = 64
 
 emptyLineData = ("", "", "", [])
 
@@ -79,11 +79,11 @@ toCommitterPanel rows = P.toPanel dimensions (header:rows)
         header = ["Top Committers", "Com", "Files", "+", "-", "+/-"]
 
 toComPanelArgs :: [Contributor] -> [[String]]
-toComPanelArgs = List.map contributorToStatLine . take 10 . sortContribsByCommits
+toComPanelArgs = List.map contributorToStatLine . take 15 . sortContribsByCommits
 
 toFilesPanel :: [[String]] -> [String]
 toFilesPanel rows = P.toPanel dimensions (header:rows)
-  where dimensions = [44, 6, 6, 8, 8, 8]
+  where dimensions = [64, 6, 6, 8, 8, 8]
         header = ["Top Files", "Com", "Auth", "+", "-", "+/-"]
 
 toFPanelArgs :: String -> [GitFile]-> [[String]]
