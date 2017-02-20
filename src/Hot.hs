@@ -18,6 +18,7 @@ import FileStat
 import Contributor
 import Commit
 import GitFile
+import GitDir
 
 import Printer as P
 import Util
@@ -102,14 +103,14 @@ flushState all@(s, d@(sha, _, _, _), res) =
    where addRecord (s, a, d, f) = (createCommit s a d f):res
 
 processLines :: [Line] -> GitState
-processLines = Prelude.foldl processLine ("BEGIN", emptyLineData, [])
+processLines = Prelude.foldr processLine ("BEGIN", emptyLineData, [])
 
-processLine :: GitState -> Line -> GitState
-processLine x@("BEGIN", _, _) = processCommit x "AUTHOR"
-processLine x@("AUTHOR", _, _) = processAuthor x "DATE"
-processLine x@("DATE", _, _) = processDate x "STAT_BEGIN"
-processLine x@("STAT_BEGIN", _, _) = processStatBegin x "STAT"
-processLine x@("STAT", _, _) = processStat x "STAT"
+processLine :: Line -> GitState -> GitState
+processLine l x@("BEGIN", _, _) = processCommit x "AUTHOR" l
+processLine l x@("AUTHOR", _, _) = processAuthor x "DATE" l
+processLine l x@("DATE", _, _) = processDate x "STAT_BEGIN" l
+processLine l x@("STAT_BEGIN", _, _) = processStatBegin x "STAT" l
+processLine l x@("STAT", _, _) = processStat x "STAT" l
 
 processCommit :: GitState -> State -> Line -> GitState
 processCommit a@(s, (_, author, date, fs), r) ns l =
@@ -177,3 +178,4 @@ sortGitFilesByCommits = List.sortBy (check `on` (length . getGitFileCommits))
         check = flip compare
 
 ------------------
+
