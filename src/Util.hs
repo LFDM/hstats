@@ -2,6 +2,8 @@ module Util
 ( values
 , removeUnicode
 , lookupWithDefault
+, shorten
+, shortenWithEllipsis
 ) where
 
 import Data.Maybe
@@ -16,5 +18,20 @@ lookupWithDefault d key m = fromMaybe d (Map.lookup key m)
 
 removeUnicode :: String -> String
 removeUnicode xs = [ x | x <- xs, x `notElem` "\246" ]
+
+shorten :: Int -> String -> String
+shorten limit s
+  | l > limit = drop (l - limit) s
+  | otherwise = s
+  where l = length s
+
+shortenWithEllipsis :: Int -> String -> String
+shortenWithEllipsis limit s
+  | l > limit = "..." ++ (drop 3 . shorten limit) s
+  | otherwise = s
+  where l = length s
+
+slice :: Int -> Int -> String -> String
+slice start end = take (end - start + 1) . drop start
 
 
