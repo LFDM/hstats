@@ -4,6 +4,7 @@ module Util
 , lookupWithDefault
 , shorten
 , shortenWithEllipsis
+, addUnique
 ) where
 
 import Data.Maybe
@@ -33,5 +34,8 @@ shortenWithEllipsis limit s
 
 slice :: Int -> Int -> String -> String
 slice start end = take (end - start + 1) . drop start
+
+addUnique :: (Eq a) => a -> [a] -> [a]
+addUnique x xs = if x `elem` xs then xs else x:xs
 
 

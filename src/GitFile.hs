@@ -10,7 +10,7 @@ module GitFile
 ) where
 
 import Commit
-import Util (shortenWithEllipsis)
+import Util (addUnique, shortenWithEllipsis)
 
 data GitFile = GitFile { path :: String
                        , commits :: [Commit]
@@ -25,15 +25,12 @@ createGitFile p = GitFile { path=p, commits=[], authors=[], additions=0, deletio
 addToGitFile :: Commit -> Int -> Int -> GitFile -> GitFile
 addToGitFile c a d f = GitFile { path=(path f)
                                , commits=c:commits f
-                               , authors=addAuthor . getCommitAuthor $ c
+                               , authors=addUnique (getCommitAuthor c) (authors f)
                                , additions=nextA
                                , deletions=nextD
                                }
   where nextA = (additions f) + a
         nextD = (deletions f) + d
-        auths = authors f
-        addAuthor author = if author `elem` auths then auths else author:auths
-
 
 
 getGitFileCommits :: GitFile -> [Commit]
