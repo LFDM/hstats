@@ -31,15 +31,16 @@ filePanelPathLen = 44
 
 emptyLineData = ("", "", "", [])
 
-gitLog :: String -> IO String
-gitLog timeframe = readProcess cmd args []
+gitLog :: String -> String -> IO String
+gitLog timeframe dir = readProcess cmd (concat [args, path]) []
   where cmd = "git"
-        args = ["log", "--numstat", "--no-color", "--since=" ++ timeframe]
+        path = if Prelude.null dir then [] else ["--", dir]
+        args = ["log", "--numstat", "--no-color", "--since=" ++ timeframe] ++ path
 
-printStats :: String -> IO ()
-printStats timeframe = do
+printStats :: String -> String -> IO ()
+printStats timeframe dir = do
   start <- getCurrentTime
-  gitOutput <- gitLog timeframe
+  gitOutput <- gitLog timeframe dir
   let commits = parseGitOutput gitOutput
   let contributors = collectContributors commits
   putStrLn $ P.join . toCommitterPanel . toComPanelArgs $ contributors
