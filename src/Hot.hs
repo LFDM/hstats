@@ -9,6 +9,7 @@ import Data.Maybe
 import Data.Map as Map
 import Data.List as List
 import Data.Time
+import System.FilePath (combine)
 import System.Process
 import System.IO
 import Text.Regex.Posix
@@ -19,7 +20,7 @@ import Commit
 import GitFile
 
 import Printer as P
-import Util (lookupWithDefault, removeUnicode, values)
+import Util
 
 
 type GitLineData = (String, String, String, [FileStat])
@@ -37,25 +38,32 @@ gitLog timeframe dir = readProcess cmd (concat [args, path]) []
         path = if Prelude.null dir then [] else ["--", dir]
         args = ["log", "--numstat", "--no-color", "--since=" ++ timeframe] ++ path
 
+gitRoot :: IO String
+gitRoot = readProcess cmd args []
+  where cmd = "git"
+        args = ["rev-parse", "--show-prefix"]
+
+
 printStats :: String -> String -> IO ()
 printStats timeframe dir = do
   start <- getCurrentTime
   gitOutput <- gitLog timeframe dir
+  rootDir <- gitRoot
+  let fullDir = combine rootDir dir
+  putStrLn $ unwords ["Analyzing commits in", fullDir]
+
   let commits = parseGitOutput gitOutput
   let contributors = collectContributors commits
   putStrLn $ P.join . toCommitterPanel . toComPanelArgs $ contributors
   putStrLn ""
 
   let files = collectFiles commits
-  putStrLn $ P.join . toFilesPanel . toFPanelArgs $ files
+  putStrLn $ P.join . toFilesPanel . toFPanelArgs fullDir $ files
   putStrLn ""
 
   stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
   return ()
-
-  where toComPanelArgs = List.map contributorToStatLine . take 10 . sortContribsByCommits
-        toFPanelArgs = List.map (gitFileToStatLineShort filePanelPathLen) . take 15 . sortGitFilesByCommits
 
 
 toCommitterPanel :: [[String]] -> [String]
@@ -63,10 +71,19 @@ toCommitterPanel rows = P.toPanel dimensions (header:rows)
   where dimensions = [filePanelPathLen, 6, 6, 8, 8, 8]
         header = ["Top Committers", "Com", "Files", "+", "-", "+/-"]
 
+toComPanelArgs :: [Contributor] -> [[String]]
+toComPanelArgs = List.map contributorToStatLine . take 10 . sortContribsByCommits
+
 toFilesPanel :: [[String]] -> [String]
 toFilesPanel rows = P.toPanel dimensions (header:rows)
   where dimensions = [44, 6, 6, 8, 8, 8]
         header = ["Top Files", "Com", "Auth", "+", "-", "+/-"]
+
+toFPanelArgs :: String -> [GitFile]-> [[String]]
+toFPanelArgs dir = List.map toStatLine . take 15 . sortGitFilesByCommits
+  where toStatLine = shortenFN . gitFileToStatLine
+        shortenFN (x:xs)= shortenWithEllipsis filePanelPathLen (dropPrefix x):xs
+        dropPrefix = removeLeading $ normalizePath dir
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines

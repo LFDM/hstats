@@ -6,11 +6,10 @@ module GitFile
 , getGitFileCommits
 , getGitFileStats
 , gitFileToStatLine
-, gitFileToStatLineShort
 ) where
 
 import Commit
-import Util (addUnique, shortenWithEllipsis)
+import Util (addUnique)
 
 data GitFile = GitFile { path :: String
                        , commits :: [Commit]
@@ -48,7 +47,3 @@ getGitFileStats f = (com f, auth f, additions f, deletions f)
 gitFileToStatLine :: GitFile -> [String]
 gitFileToStatLine f = (path f):(toStats (getGitFileStats f))
   where toStats (a, b, c, d) = map show [a, b, c, d,  c - d]
-
-gitFileToStatLineShort :: Int -> GitFile -> [String]
-gitFileToStatLineShort limit = (shortPath limit) . gitFileToStatLine
-  where shortPath limit (x:xs) = shortenWithEllipsis limit x:xs

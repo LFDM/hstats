@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Util
 ( values
 , removeUnicode
@@ -5,6 +7,8 @@ module Util
 , shorten
 , shortenWithEllipsis
 , addUnique
+, normalizePath
+, removeLeading
 ) where
 
 import Data.Maybe
@@ -44,5 +48,8 @@ normalizePath :: FilePath -> FilePath
 normalizePath path = joinPath $ List.foldr norm [] paths
   where paths = splitDirectories path
         norm p ps = if p =~ "^\\.+$" then drop ((length p) - 1) ps else p:ps
+
+removeLeading :: [a] -> [a] -> [a]
+removeLeading x = drop $ (length x) - 1
 
 
