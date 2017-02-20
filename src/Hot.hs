@@ -49,8 +49,9 @@ printStats timeframe dir = do
   start <- getCurrentTime
   gitOutput <- gitLog timeframe dir
   rootDir <- gitRoot
-  let fullDir = combine rootDir dir
+  let fullDir = combine (trimR rootDir) dir
   putStrLn $ unwords ["Analyzing commits in", fullDir]
+  putStrLn ""
 
   let commits = parseGitOutput gitOutput
   let contributors = collectContributors commits
@@ -83,7 +84,7 @@ toFPanelArgs :: String -> [GitFile]-> [[String]]
 toFPanelArgs dir = List.map toStatLine . take 15 . sortGitFilesByCommits
   where toStatLine = shortenFN . gitFileToStatLine
         shortenFN (x:xs)= shortenWithEllipsis filePanelPathLen (dropPrefix x):xs
-        dropPrefix = removeLeading $ normalizePath dir
+        dropPrefix = removeLeadingSlash . removeLeading (normalizePath dir)
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines

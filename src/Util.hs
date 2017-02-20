@@ -9,8 +9,13 @@ module Util
 , addUnique
 , normalizePath
 , removeLeading
+, removeLeadingSlash
+, trimL
+, trimR
+, trim
 ) where
 
+import Data.Char
 import Data.Maybe
 import Data.Map as Map
 import Data.List as List
@@ -47,9 +52,20 @@ addUnique x xs = if x `elem` xs then xs else x:xs
 normalizePath :: FilePath -> FilePath
 normalizePath path = joinPath $ List.foldr norm [] paths
   where paths = splitDirectories path
-        norm p ps = if p =~ "^\\.+$" then drop ((length p) - 1) ps else p:ps
+        norm p ps = if p =~ "^\\.+$" then drop (length p) ps else p:ps
+
+removeLeadingSlash = removeLeading "/"
 
 removeLeading :: [a] -> [a] -> [a]
-removeLeading x = drop $ (length x) - 1
+removeLeading x = drop $ (length x)
+
+trimR :: String -> String
+trimR = reverse . dropWhile isSpace . reverse
+
+trimL :: String -> String
+trimL = dropWhile isSpace
+
+trim :: String -> String
+trim = trimR . trimL
 
 
