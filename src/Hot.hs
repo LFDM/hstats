@@ -16,9 +16,10 @@ import Text.Regex.Posix
 import FileStat
 import Contributor
 import Commit
+import GitFile
 
 import Printer as P
-import Util (removeUnicode, values)
+import Util (lookupWithDefault, removeUnicode, values)
 
 
 type GitLineData = (String, String, String, [FileStat])
@@ -39,16 +40,19 @@ printStats timeframe = do
   gitOutput <- gitLog timeframe
   let commits = parseGitOutput gitOutput
   let contributors = collectContributors commits
-  putStrLn $ P.join . toCommitterPanel . toPanelArgs $ contributors
-  stop <- getCurrentTime
+  putStrLn $ P.join . toCommitterPanel . toComPanelArgs $ contributors
   putStrLn ""
+
+  let files = collectFiles commits
+  putStrLn $ P.join . toFilesPanel . toFPanelArgs $ files
+  putStrLn ""
+
+  stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
   return ()
 
-  where toPanelArgs = List.map (addDiff . contributorToStatLine) . take 10 . sortByCommits
-        withDiff = List.map addDiff
-        addDiff x@(_:_:_:a:d:_) = x ++ [show (toInt a - toInt d)]
-        toInt s = read s :: Int
+  where toComPanelArgs = List.map contributorToStatLine . take 10 . sortContribsByCommits
+        toFPanelArgs = List.map gitFileToStatLine . take 15 . sortGitFilesByCommits
 
 
 toCommitterPanel :: [[String]] -> [String]
@@ -56,6 +60,10 @@ toCommitterPanel rows = P.toPanel dimensions (header:rows)
   where dimensions = [40, 6, 6, 8, 8, 8]
         header = ["Top Committers", "Com", "Files", "+", "-", "+/-"]
 
+toFilesPanel :: [[String]] -> [String]
+toFilesPanel rows = P.toPanel dimensions (header:rows)
+  where dimensions = [50, 6, 8, 8, 8]
+        header = ["Top Files", "Com", "+", "-", "+/-"]
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines
@@ -101,6 +109,8 @@ processStat x ns l = if Prelude.null match then flushState x else addStat x (mat
         addStat (_, (sha, author, date, fs), r) (_:a:d:p:_) =
           (ns, (sha, author, date, (createFileStat a d p):fs), r)
 
+-------------------
+
 collectContributors :: [Commit] -> [Contributor]
 collectContributors = values . (Prelude.foldr collectContribFromCommit Map.empty)
 
@@ -110,8 +120,33 @@ collectContribFromCommit com res = Map.insert author nextContrib res
         nextContrib = addCommitToContributor com $ getContributor author res
 
 getContributor :: String -> Map String Contributor -> Contributor
-getContributor author cs = fromMaybe (createContributor author) (Map.lookup author cs)
+getContributor author = lookupWithDefault (createContributor author) author
 
-sortByCommits :: [Contributor] -> [Contributor]
-sortByCommits = List.sortBy ((flip compare) `on` (commitCount . getContributorStats))
+sortContribsByCommits :: [Contributor] -> [Contributor]
+sortContribsByCommits = List.sortBy (check `on` (commitCount . getContributorStats))
   where commitCount (c, _, _, _) = c
+        check = flip compare
+
+-------------------
+
+collectFiles :: [Commit] -> [GitFile]
+collectFiles = values . (Prelude.foldr collectFilesFromCommit Map.empty)
+
+collectFilesFromCommit :: Commit -> Map String GitFile -> Map String GitFile
+collectFilesFromCommit c m = Prelude.foldr (collectFileFromFileStats c) m commits
+  where commits = getCommitFiles c
+
+collectFileFromFileStats :: Commit -> FileStat -> Map String GitFile -> Map String GitFile
+collectFileFromFileStats c fs m = Map.insert path ((nextGF . getFSChanges) fs) m
+  where path = getFSPath fs
+        nextGF (a, d) = addToGitFile c a d $ getGitFile path m
+
+getGitFile :: String -> Map String GitFile -> GitFile
+getGitFile p = lookupWithDefault (createGitFile p) p
+
+sortGitFilesByCommits :: [GitFile] -> [GitFile]
+sortGitFilesByCommits = List.sortBy (check `on` (length . getGitFileCommits))
+  where commitCount (c, _, _, _) = c
+        check = flip compare
+
+------------------
