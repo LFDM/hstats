@@ -10,6 +10,8 @@ module Util
 import Data.Maybe
 import Data.Map as Map
 import Data.List as List
+import System.FilePath
+import Text.Regex.Posix
 
 values :: Map k v -> [v]
 values = (List.map snd) . Map.toList
@@ -37,5 +39,10 @@ slice start end = take (end - start + 1) . drop start
 
 addUnique :: (Eq a) => a -> [a] -> [a]
 addUnique x xs = if x `elem` xs then xs else x:xs
+
+normalizePath :: FilePath -> FilePath
+normalizePath path = joinPath $ List.foldr norm [] paths
+  where paths = splitDirectories path
+        norm p ps = if p =~ "^\\.+$" then drop ((length p) - 1) ps else p:ps
 
 
