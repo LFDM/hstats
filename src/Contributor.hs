@@ -39,6 +39,6 @@ addCommitToContributor com c = Contributor {name=author, stats=stats, commits=co
 
 contributorToStatLine :: Contributor -> [String]
 contributorToStatLine c = (name c):((toStats . stats) c)
-  where toStats (a, b, c, d) = map show [a, b, c, d]
+  where toStats (a, b, c, d) = map show [a, b, c, d, c - d]
 
 
