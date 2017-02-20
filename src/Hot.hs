@@ -27,6 +27,8 @@ type State = String
 type GitState = (State, GitLineData, [Commit])
 type Line = String
 
+filePanelPathLen = 44
+
 emptyLineData = ("", "", "", [])
 
 gitLog :: String -> IO String
@@ -52,12 +54,12 @@ printStats timeframe = do
   return ()
 
   where toComPanelArgs = List.map contributorToStatLine . take 10 . sortContribsByCommits
-        toFPanelArgs = List.map (gitFileToStatLineShort 50) . take 15 . sortGitFilesByCommits
+        toFPanelArgs = List.map (gitFileToStatLineShort filePanelPathLen) . take 15 . sortGitFilesByCommits
 
 
 toCommitterPanel :: [[String]] -> [String]
 toCommitterPanel rows = P.toPanel dimensions (header:rows)
-  where dimensions = [44, 6, 6, 8, 8, 8]
+  where dimensions = [filePanelPathLen, 6, 6, 8, 8, 8]
         header = ["Top Committers", "Com", "Files", "+", "-", "+/-"]
 
 toFilesPanel :: [[String]] -> [String]
