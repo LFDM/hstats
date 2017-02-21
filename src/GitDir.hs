@@ -92,7 +92,8 @@ getGitDirCommits = commits
 gitDirToStatLine :: GitDir -> [String]
 gitDirToStatLine d = (path d):foldr showStat [] accs
   where showStat x y = (show . x) d:y
-        accs = [(length .commits), (length . authors), additions, deletions]
+        accs = [(length . commits), (length . authors), additions, deletions, diff]
+        diff x = additions x - deletions x
 
 mergeCommits = mergeUnique `on` commits
 mergeAuthors = mergeUnique `on` authors
