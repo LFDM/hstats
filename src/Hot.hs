@@ -70,9 +70,8 @@ printStats timeframe dir accuracy = do
   putStrLn ""
 
   let dir = collectDirs files
-  print $ length . getGitDirCommits $ dir
-  print $ List.map (length . getGitDirCommits) (getGitDirChildren dir)
-  print $ gitDirToStatLine dir
+  putStrLn $ P.join . toDirPanel . toDirPanelArgs fullDir $ dir
+  putStrLn ""
 
   stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
@@ -95,8 +94,21 @@ toFilesPanel rows = P.toPanel dimensions (header:rows)
 toFPanelArgs :: String -> [GitFile]-> [[String]]
 toFPanelArgs dir = List.map toStatLine . take 15 . sortGitFilesByCommits
   where toStatLine = shortenFN . gitFileToStatLine
-        shortenFN (x:xs)= shortenWithEllipsis filePanelPathLen (dropPrefix x):xs
-        dropPrefix = removeLeadingSlash . removeLeading (normalizePath dir)
+        shortenFN (x:xs)= shortenFilename dir x:xs
+
+toDirPanel :: [[String]] -> [String]
+toDirPanel rows = P.toPanel dimensions (header:rows)
+  where dimensions = [64, 6, 6, 8, 8, 8]
+        header = ["Top Dirs", "Com", "Auth", "+", "-", "+/-"]
+
+toDirPanelArgs :: String -> GitDir -> [[String]]
+toDirPanelArgs rootDir dir = collect [] [dir]
+  where collect acc [] = acc
+        collect acc (x:xs) = collect (nextAcc acc x) xs
+        nextAcc acc d = concat [acc, [toStat d], childrenToStat d]
+        childrenToStat d = List.map toStat . sortGitDirsByCommits $ getGitDirChildren d
+        toStat = shortenFN . gitDirToStatLine
+        shortenFN (x:xs) = shortenFilename rootDir x:xs
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines
@@ -214,4 +226,8 @@ addToParents' xs s ds = addToParents' pPaths s $ next ds
 
 sortGitDirsByCommits :: [GitDir] -> [GitDir]
 sortGitDirsByCommits = sortByAccessorDesc $ length . getGitDirCommits
+
+shortenFilename :: String -> String -> String
+shortenFilename rootDir n = shortenWithEllipsis filePanelPathLen (dropPrefix n)
+  where dropPrefix = removeLeadingSlash . removeLeading (normalizePath rootDir)
 
