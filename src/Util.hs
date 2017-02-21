@@ -63,9 +63,17 @@ normalizePath path = joinPath $ List.foldr norm [] paths
 removeLeadingSlash = removeLeading "/"
 
 removeLeading :: (Eq a) => [a] -> [a] -> [a]
-removeLeading x ys = if isEqual x ys then drop l ys else ys
-  where l = length x
-        isEqual a b = a == take l b
+removeLeading x ys = if startsWith x ys then drop (length x) ys else ys
+
+startsWith :: (Eq a) => [a] -> [a] -> Bool
+startsWith x y = x == take (length x) y
+
+replaceLeading :: (Eq a) => [a] -> [a] -> [a] -> [a]
+replaceLeading leading replace str = if startsWith leading str then repl else str
+  where repl = r ++ drop l str
+        r = take l $ concat (replicate l replace)
+        l = length leading
+
 
 trimR :: String -> String
 trimR = reverse . dropWhile isSpace . reverse
