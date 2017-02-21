@@ -3,8 +3,11 @@ module GitFile
 , createGitFile
 , addToGitFile
 , getGitFilePath
+, getGitFileAuthors
 , getGitFileCommits
 , getGitFileStats
+, getGitFileAdditions
+, getGitFileDeletions
 , gitFileToStatLine
 ) where
 
@@ -35,6 +38,9 @@ addToGitFile c a d f = GitFile { path=(path f)
 getGitFileCommits :: GitFile -> [Commit]
 getGitFileCommits = commits
 
+getGitFileAuthors :: GitFile -> [String]
+getGitFileAuthors = authors
+
 getGitFilePath :: GitFile -> String
 getGitFilePath = path
 
@@ -43,6 +49,11 @@ getGitFileStats f = (com f, auth f, additions f, deletions f)
   where com = length . commits
         auth = length . authors
 
+getGitFileAdditions :: GitFile -> Int
+getGitFileAdditions = additions
+
+getGitFileDeletions :: GitFile -> Int
+getGitFileDeletions = deletions
 
 gitFileToStatLine :: GitFile -> [String]
 gitFileToStatLine f = (path f):(toStats (getGitFileStats f))

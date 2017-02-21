@@ -9,7 +9,7 @@ import Data.Maybe
 import Data.Map as Map
 import Data.List as List
 import Data.Time
-import System.FilePath (combine)
+import System.FilePath (combine, joinPath, splitDirectories)
 import System.Process
 import System.IO
 import Text.Regex.Posix
@@ -68,6 +68,11 @@ printStats timeframe dir accuracy = do
   let files = collectFiles commits
   putStrLn $ P.join . toFilesPanel . toFPanelArgs fullDir $ files
   putStrLn ""
+
+  let dir = collectDirs files
+  print $ length . getGitDirCommits $ dir
+  print $ List.map (length . getGitDirCommits) (getGitDirChildren dir)
+  print $ gitDirToStatLine dir
 
   stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
@@ -174,8 +179,43 @@ getGitFile p = lookupWithDefault (createGitFile p) p
 
 sortGitFilesByCommits :: [GitFile] -> [GitFile]
 sortGitFilesByCommits = List.sortBy (check `on` (length . getGitFileCommits))
-  where commitCount (c, _, _, _) = c
-        check = flip compare
+  where check = flip compare
 
 ------------------
+
+-- while we could create the tree on the fly, it's cheaper to
+-- do a second pass, otherwise we create a lot of intermediary objects
+collectDirs :: [GitFile] -> GitDir
+collectDirs = toDirTree . Prelude.foldr collectDirsFromFile Map.empty
+
+collectDirsFromFile :: GitFile -> Map String GitDir -> Map String GitDir
+collectDirsFromFile f = addDir pDirs f
+  where pDirs = init . splitDirectories . getGitFilePath $ f
+        addDir [] _ z = z
+        addDir ps y z = addDir (init ps) y $ insert (joinPath ps) y z
+        insert k y z = Map.insert k (merge k y z) z
+        merge k y z = addToGitDir y $ lookupWithDefault (empty k) k z
+        empty = createGitDir
+
+
+toDirTree :: Map String GitDir -> GitDir
+toDirTree ds = unpack $ List.foldr addParents ds (Map.toList ds)
+  where empty = createGitDir ""
+        unpack = lookupWithDefault empty ""
+
+addParents :: (String, GitDir) -> Map String GitDir -> Map String GitDir
+addParents (p, d) = addToParents' pPaths d
+  where pPaths = "":splitDirectories p
+
+addToParents' :: [String] -> GitDir -> Map String GitDir -> Map String GitDir
+addToParents' [] _ ds = ds
+addToParents' xs s ds = addToParents' pPaths s $ next ds
+  where pPaths = init xs
+        next = Map.insertWith mergeGitDir (concat pPaths) (gitSubDirToDir s)
+
+
+sortGitDirsByCommits :: [GitDir] -> [GitDir]
+sortGitDirsByCommits = List.sortBy (check `on` (length . getGitDirCommits))
+  where commitCount (c, _, _, _) = c
+        check = flip compare
 

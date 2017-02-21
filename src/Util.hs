@@ -7,6 +7,7 @@ module Util
 , shorten
 , shortenWithEllipsis
 , addUnique
+, mergeUnique
 , normalizePath
 , removeLeading
 , removeLeadingSlash
@@ -48,6 +49,9 @@ slice start end = take (end - start + 1) . drop start
 
 addUnique :: (Eq a) => a -> [a] -> [a]
 addUnique x xs = if x `elem` xs then xs else x:xs
+
+mergeUnique :: (Eq a) => [a] -> [a] -> [a]
+mergeUnique = Prelude.foldr addUnique
 
 normalizePath :: FilePath -> FilePath
 normalizePath path = joinPath $ List.foldr norm [] paths
