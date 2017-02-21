@@ -14,9 +14,11 @@ module Util
 , trimL
 , trimR
 , trim
+, sortByAccessorDesc
 ) where
 
 import Data.Char
+import Data.Function
 import Data.Maybe
 import Data.Map as Map
 import Data.List as List
@@ -72,4 +74,7 @@ trimL = dropWhile isSpace
 trim :: String -> String
 trim = trimR . trimL
 
+sortByAccessorDesc :: (Ord b) => (a -> b) -> [a] -> [a]
+sortByAccessorDesc f = List.sortBy (check `on` f)
+  where check = flip compare
 

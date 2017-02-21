@@ -44,12 +44,14 @@ createGitDir p = GitDir { path=p
 
 mergeGitDir :: GitDir -> GitDir -> GitDir
 mergeGitDir x y = GitDir { path=path x
-                         , commits=mergeUnique (commits x) (commits y)
-                         , authors=mergeUnique (authors x) (authors y)
-                         , additions=sum . map additions $ [x, y]
-                         , deletions=sum . map deletions $ [x, y]
+                         , commits=mergeCommits x y
+                         , authors=mergeAuthors x y
+                         , additions=sumMap additions [x, y]
+                         , deletions=sumMap deletions [x, y]
                          , children=mergeUnique (children x) (children y)
                          }
+  where mergeCommits = mergeUnique `on` commits
+        mergeAuthors = mergeUnique `on` authors
 
 addToGitDir :: GitFile -> GitDir -> GitDir
 addToGitDir f d = GitDir { path=path d
@@ -62,10 +64,10 @@ addToGitDir f d = GitDir { path=path d
 
 addGitSubDir :: GitDir -> GitDir -> GitDir
 addGitSubDir par sub = GitDir { path=path par
-                          , commits=mergeUnique (commits par) (commits sub)
-                          , authors=mergeUnique (authors par) (authors sub)
-                          , additions= sum . map additions $ [par, sub]
-                          , deletions= sum . map deletions $ [par, sub]
+                          , commits=mergeCommits par sub
+                          , authors=mergeAuthors par sub
+                          , additions= sumMap additions [par, sub]
+                          , deletions= sumMap deletions [par, sub]
                           , children=sub:children par
                           }
 
@@ -88,8 +90,11 @@ getGitDirDeletions = deletions
 getGitDirCommits = commits
 
 gitDirToStatLine :: GitDir -> [String]
-gitDirToStatLine d = (path d):foldr showStat [] [(length .commits), additions, deletions]
+gitDirToStatLine d = (path d):foldr showStat [] accs
   where showStat x y = (show . x) d:y
+        accs = [(length .commits), (length . authors), additions, deletions]
 
+mergeCommits = mergeUnique `on` commits
+mergeAuthors = mergeUnique `on` authors
 
-
+sumMap f = sum . map f

@@ -156,9 +156,8 @@ getContributor :: String -> Map String Contributor -> Contributor
 getContributor author = lookupWithDefault (createContributor author) author
 
 sortContribsByCommits :: [Contributor] -> [Contributor]
-sortContribsByCommits = List.sortBy (check `on` (commitCount . getContributorStats))
+sortContribsByCommits = sortByAccessorDesc $ commitCount . getContributorStats
   where commitCount (c, _, _, _) = c
-        check = flip compare
 
 -------------------
 
@@ -178,8 +177,7 @@ getGitFile :: String -> Map String GitFile -> GitFile
 getGitFile p = lookupWithDefault (createGitFile p) p
 
 sortGitFilesByCommits :: [GitFile] -> [GitFile]
-sortGitFilesByCommits = List.sortBy (check `on` (length . getGitFileCommits))
-  where check = flip compare
+sortGitFilesByCommits = sortByAccessorDesc $ length . getGitFileCommits
 
 ------------------
 
@@ -215,7 +213,5 @@ addToParents' xs s ds = addToParents' pPaths s $ next ds
 
 
 sortGitDirsByCommits :: [GitDir] -> [GitDir]
-sortGitDirsByCommits = List.sortBy (check `on` (length . getGitDirCommits))
-  where commitCount (c, _, _, _) = c
-        check = flip compare
+sortGitDirsByCommits = sortByAccessorDesc $ length . getGitDirCommits
 
