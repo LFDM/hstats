@@ -58,5 +58,5 @@ getGitFileDeletions = deletions
 gitFileToStatLine :: GitFile -> [String]
 gitFileToStatLine f = (path f):(toStats (getGitFileStats f))
   where toStats (a, b, c, d) = map show [a, b, c, d,  c - d, avg a c, avg a d, avg a (c - d)]
-        avg 0 y = y
+        avg 0 y = 0
         avg x y = y `quot` x

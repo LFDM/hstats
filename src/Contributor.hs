@@ -40,7 +40,7 @@ addCommitToContributor com c = Contributor {name=author, stats=stats, commits=co
 contributorToStatLine :: Contributor -> [String]
 contributorToStatLine c = (name c):((toStats . stats) c)
   where toStats (n, c, a, d) = map show [n, c, a, d, a - d, avg c a, avg c d, avg c (a - d)]
-        avg 0 y = y
+        avg 0 y = 0
         avg x y = y `quot` x
 
 
