@@ -62,8 +62,10 @@ normalizePath path = joinPath $ List.foldr norm [] paths
 
 removeLeadingSlash = removeLeading "/"
 
-removeLeading :: [a] -> [a] -> [a]
-removeLeading x = drop $ (length x)
+removeLeading :: (Eq a) => [a] -> [a] -> [a]
+removeLeading x ys = if isEqual x ys then drop l ys else ys
+  where l = length x
+        isEqual a b = a == take l b
 
 trimR :: String -> String
 trimR = reverse . dropWhile isSpace . reverse
