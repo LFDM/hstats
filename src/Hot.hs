@@ -75,6 +75,8 @@ printStats timeframe dir accuracy = do
 
   stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
+
+  print $ List.map getGitDirPath (getGitDirChildren dir)
   return ()
 
 

@@ -80,7 +80,7 @@ gitSubDirToDir s = GitDir { path=joinPath . init . splitDirectories . path $ s
                           , authors=authors s
                           , additions=additions s
                           , deletions=deletions s
-                          , children=s:children s
+                          , children=[s]
                           }
 
 getGitDirPath = path
@@ -104,11 +104,13 @@ sumMap f = sum . map f
 gitDirToNormalizedSortedList :: GitDir -> [(Maybe GitDir, GitDir)]
 gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' Nothing
 
+
+
 gitDirToNormalizedSortedList' :: Maybe GitDir -> GitDir -> [(Maybe GitDir, GitDir)]
 gitDirToNormalizedSortedList' par d = withChildren par d $ sortGitDirsByCommits (children d)
-  where withChildren p x [] = [(p, x)]
+  where withChildren p x [] = concat [[(p, x)], [(Nothing, createGitDir "YYY")]]
         withChildren p x (y:[]) = gitDirToNormalizedSortedList' p y
-        withChildren p x ys = (p, x):concatMap (gitDirToNormalizedSortedList' (Just x)) ys
+        withChildren p x ys = (p, x):concat [concatMap (gitDirToNormalizedSortedList' (Just x)) ys, [(Nothing, createGitDir "XXX")]]
 
 sortGitDirsByCommits :: [GitDir] -> [GitDir]
 sortGitDirsByCommits = sortByAccessorDesc $ length . commits
