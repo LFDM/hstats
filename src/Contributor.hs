@@ -5,10 +5,12 @@ module Contributor
 , addCommitToContributor
 , getContributorStats
 , contributorToStatLine
+, sortContribsByCommits
 ) where
 
 import Commit
 import FileStat
+import Util (sortByAccessorDesc)
 
 type ContributorStats = (Int, Int, Int, Int)
 data Contributor = Contributor { name :: String
@@ -43,4 +45,6 @@ contributorToStatLine c = (name c):((toStats . stats) c)
         avg 0 y = 0
         avg x y = y `quot` x
 
+sortContribsByCommits :: [Contributor] -> [Contributor]
+sortContribsByCommits = sortByAccessorDesc $ length . commits
 

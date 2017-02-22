@@ -166,10 +166,6 @@ collectContribFromCommit com res = Map.insert author nextContrib res
 getContributor :: String -> Map String Contributor -> Contributor
 getContributor author = lookupWithDefault (createContributor author) author
 
-sortContribsByCommits :: [Contributor] -> [Contributor]
-sortContribsByCommits = sortByAccessorDesc $ commitCount . getContributorStats
-  where commitCount (c, _, _, _) = c
-
 -------------------
 
 collectFiles :: [Commit] -> [GitFile]
@@ -186,9 +182,6 @@ collectFileFromFileStats c fs m = Map.insert path ((nextGF . getFSChanges) fs) m
 
 getGitFile :: String -> Map String GitFile -> GitFile
 getGitFile p = lookupWithDefault (createGitFile p) p
-
-sortGitFilesByCommits :: [GitFile] -> [GitFile]
-sortGitFilesByCommits = sortByAccessorDesc $ length . getGitFileCommits
 
 ------------------
 
