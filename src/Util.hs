@@ -16,6 +16,7 @@ module Util
 , trimR
 , trim
 , sortByAccessorDesc
+, shortenFileName
 ) where
 
 import Data.Char
@@ -84,6 +85,10 @@ trimL = dropWhile isSpace
 
 trim :: String -> String
 trim = trimR . trimL
+
+shortenFileName :: Int -> String -> String -> String
+shortenFileName maxLen rootDir n = shortenWithEllipsis maxLen (dropPrefix n)
+  where dropPrefix = removeLeadingSlash . removeLeading (normalizePath rootDir)
 
 sortByAccessorDesc :: (Ord b) => (a -> b) -> [a] -> [a]
 sortByAccessorDesc f = List.sortBy (check `on` f)

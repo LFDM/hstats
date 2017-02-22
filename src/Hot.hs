@@ -94,7 +94,7 @@ toFilesPanel rows = P.toPanel dimensions (header:rows)
 toFPanelArgs :: String -> [GitFile]-> [[String]]
 toFPanelArgs dir = List.map toStatLine . take 15 . sortGitFilesByCommits
   where toStatLine = shortenFN . gitFileToStatLine
-        shortenFN (x:xs)= shortenFilename dir x:xs
+        shortenFN (x:xs)= shortenFileName' dir x:xs
 
 toDirPanel :: [[String]] -> [String]
 toDirPanel rows = P.toPanel dimensions (header:rows)
@@ -106,7 +106,7 @@ toDirPanelArgs rootDir dir = List.map toStat $ gitDirToNormalizedSortedList dir
   where toStat (Nothing, d) = render "" d
         toStat (Just p, d) = render (getGitDirPath p) d
         render pPath = (shortenFN pPath) . gitDirToStatLine
-        -- shortenFN (x:xs) = shortenFilename rootDir x:xs
+        -- shortenFN (x:xs) = shortenFileName' rootDir x:xs
         shortenFN pPath (x:xs) = replaceLeading pPath " " x:xs
 
 parseGitOutput :: String -> [Commit]
@@ -216,7 +216,5 @@ addToParents' xs s ds = addToParents' pPaths s $ next ds
         next = Map.insertWith mergeGitDir (concat pPaths) (gitSubDirToDir s)
 
 
-shortenFilename :: String -> String -> String
-shortenFilename rootDir n = shortenWithEllipsis filePanelPathLen (dropPrefix n)
-  where dropPrefix = removeLeadingSlash . removeLeading (normalizePath rootDir)
+shortenFileName' = shortenFileName filePanelPathLen
 
