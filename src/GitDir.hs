@@ -13,6 +13,7 @@ module GitDir
 , getGitDirCommits
 , mergeGitDir
 , gitDirToStatLine
+, gitDirToNormalizedSortedList
 ) where
 
 import Data.Function
@@ -20,7 +21,7 @@ import System.FilePath
 
 import Commit
 import GitFile
-import Util (mergeUnique)
+import Util (mergeUnique, sortByAccessorDesc)
 
 data GitDir = GitDir { path :: String
                      , commits :: [Commit]
@@ -99,3 +100,16 @@ mergeCommits = mergeUnique `on` commits
 mergeAuthors = mergeUnique `on` authors
 
 sumMap f = sum . map f
+
+gitDirToNormalizedSortedList :: GitDir -> [(Maybe GitDir, GitDir)]
+gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' Nothing
+
+gitDirToNormalizedSortedList' :: Maybe GitDir -> GitDir -> [(Maybe GitDir, GitDir)]
+gitDirToNormalizedSortedList' par d = withChildren par d $ sortGitDirsByCommits (children d)
+  where withChildren p x [] = [(p, x)]
+        withChildren p x (y:[]) = gitDirToNormalizedSortedList' p y
+        withChildren p x ys = (p, x):concatMap (gitDirToNormalizedSortedList' (Just x)) ys
+
+sortGitDirsByCommits :: [GitDir] -> [GitDir]
+sortGitDirsByCommits = sortByAccessorDesc $ length . commits
+

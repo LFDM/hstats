@@ -11,6 +11,7 @@ module Util
 , normalizePath
 , removeLeading
 , removeLeadingSlash
+, replaceLeading
 , trimL
 , trimR
 , trim

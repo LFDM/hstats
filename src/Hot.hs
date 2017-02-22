@@ -102,13 +102,12 @@ toDirPanel rows = P.toPanel dimensions (header:rows)
         header = ["Top Dirs", "Com", "Auth", "+", "-", "+/-"]
 
 toDirPanelArgs :: String -> GitDir -> [[String]]
-toDirPanelArgs rootDir dir = collect [] [dir]
-  where collect acc [] = acc
-        collect acc (x:xs) = collect (nextAcc acc x) xs
-        nextAcc acc d = concat [acc, [toStat d], childrenToStat d]
-        childrenToStat d = List.map toStat . sortGitDirsByCommits $ getGitDirChildren d
-        toStat = shortenFN . gitDirToStatLine
-        shortenFN (x:xs) = shortenFilename rootDir x:xs
+toDirPanelArgs rootDir dir = List.map toStat $ gitDirToNormalizedSortedList dir
+  where toStat (Nothing, d) = render "" d
+        toStat (Just p, d) = render (getGitDirPath p) d
+        render pPath = (shortenFN pPath) . gitDirToStatLine
+        -- shortenFN (x:xs) = shortenFilename rootDir x:xs
+        shortenFN pPath (x:xs) = replaceLeading pPath " " x:xs
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines
@@ -223,9 +222,6 @@ addToParents' xs s ds = addToParents' pPaths s $ next ds
   where pPaths = init xs
         next = Map.insertWith mergeGitDir (concat pPaths) (gitSubDirToDir s)
 
-
-sortGitDirsByCommits :: [GitDir] -> [GitDir]
-sortGitDirsByCommits = sortByAccessorDesc $ length . getGitDirCommits
 
 shortenFilename :: String -> String -> String
 shortenFilename rootDir n = shortenWithEllipsis filePanelPathLen (dropPrefix n)
