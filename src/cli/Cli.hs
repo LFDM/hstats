@@ -1,4 +1,4 @@
-module Lib
+module Cli
 ( run
 ) where
 
@@ -56,4 +56,5 @@ logCmd cmd args = putStr $ nl (unwords output)
                  , "with"
                  , inYellow $ unwords args
                  ]
+
 

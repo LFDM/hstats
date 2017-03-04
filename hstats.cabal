@@ -14,9 +14,20 @@ extra-source-files:  README.md
 data-files:          data/lineParsers.yaml
 cabal-version:       >=1.10
 
-executable hstats
-  hs-source-dirs:      src
-  main-is:             Main.hs
+library
+  hs-source-dirs:      src/lib
+  exposed-modules:     Loc,
+                       Hot,
+                       Printer,
+                       Util
+  other-modules:       Commit,
+                       Contributor,
+                       FileStat,
+                       GitDir,
+                       GitFile,
+                       LineParsers,
+                       Paths_hstats
+
   build-depends:       base >= 4.7 && < 5,
                        directory,
                        filepath,
@@ -28,6 +39,14 @@ executable hstats
                        time,
                        process
 
+  default-language:    Haskell2010
+
+executable hstats
+  hs-source-dirs:      src/cli
+  main-is:             Main.hs
+  other-modules:       Cli
+  build-depends:       base >= 4.7 && < 5,
+                       hstats
 
   default-language:    Haskell2010
 

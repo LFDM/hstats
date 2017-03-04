@@ -69,9 +69,9 @@ printStats timeframe dir accuracy = do
   putStrLn $ P.join . toFilesPanel . toFPanelArgs fullDir $ files
   putStrLn ""
 
-  -- let dir = collectDirs files
-  -- putStrLn $ P.join . toDirPanel . toDirPanelArgs fullDir $ dir
-  -- putStrLn ""
+  let dir = collectDirs files
+  putStrLn $ P.join . toDirPanel . toDirPanelArgs fullDir $ dir
+  putStrLn ""
 
   stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
