@@ -19,8 +19,9 @@ library
   exposed-modules:     Loc,
                        Hot,
                        Printer,
-                       Util
-  other-modules:       Commit,
+                       Util,
+
+                       Commit,
                        Contributor,
                        FileStat,
                        GitDir,
@@ -47,6 +48,18 @@ executable hstats
   other-modules:       Cli
   build-depends:       base >= 4.7 && < 5,
                        hstats
+
+  default-language:    Haskell2010
+
+test-suite hstats-tests
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Main.hs
+  build-depends:       base >= 4.7 && < 5,
+                       tasty,
+                       tasty-hunit,
+                       tasty-quickcheck,
+                       tasty-smallcheck
 
   default-language:    Haskell2010
 
