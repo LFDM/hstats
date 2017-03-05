@@ -1,6 +1,5 @@
 module GitDir
 ( GitDir
-, gitSubDirToDir
 , getGitDirPath
 , getGitDirChildren
 , getGitDirAuthors
@@ -72,15 +71,6 @@ addGitSubDir par sub = GitDir { path=path par
 
 addGitSubDir' sub par = addGitSubDir par sub
 
-gitSubDirToDir :: GitDir -> GitDir
-gitSubDirToDir s = GitDir { path=joinPath . init . splitDirectories . path $ s
-                          , commits=commits s
-                          , authors=authors s
-                          , additions=additions s
-                          , deletions=deletions s
-                          , children= [s]
-                          }
-
 getGitDirPath = path
 getGitDirChildren = children
 getGitDirAuthors = children
@@ -101,7 +91,6 @@ sumMap f = sum . List.map f
 
 gitDirToNormalizedSortedList :: GitDir -> [(Maybe GitDir, GitDir)]
 gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' Nothing
-
 
 
 gitDirToNormalizedSortedList' :: Maybe GitDir -> GitDir -> [(Maybe GitDir, GitDir)]
@@ -128,25 +117,31 @@ collectDirFromFile f = insert (dir f)
         merge k ds = addToGitDir f $ lookupWithDefault (empty k) k ds
         empty = createGitDir
 
--- a/1
--- b/2
---
-  -- take a -> merge with subdir of a/1
-
 toDirTree :: Map String GitDir -> GitDir
-toDirTree ds = unpack $ List.foldr addToParents ds toSplitKeys
+toDirTree ds = unpack $ List.foldr addToParents ds (Map.toList ds)
   where empty = createGitDir ""
         unpack = lookupWithDefault empty ""
-        toSplitKeys = List.map (\p -> "":splitDirectories p) $ keys ds
 
--- "", "a", "b", "c"
-addToParents :: [String] -> Map String GitDir -> Map String GitDir
-addToParents [] ds = ds
-addToParents (x:[]) ds = ds
-addToParents xs ds = addToParents pPaths $ next ds
+addToParents :: (String, GitDir) -> Map String GitDir -> Map String GitDir
+addToParents (p, d) = addToParents' pPaths True d
+  where pPaths = "":splitDirectories p
+
+addToParents' :: [String] -> Bool -> GitDir -> Map String GitDir -> Map String GitDir
+addToParents' [] _ _ ds = ds
+addToParents' (x:[]) _ _ ds = ds
+addToParents' xs isDirectChild d ds = addToParents' pPaths False d $ next ds
   where pPaths = init xs
-        currentPath = joinPath xs
         nextPath = joinPath pPaths
-        dir = lookupWithDefault (createGitDir currentPath) currentPath ds
-        next = Map.insertWith mergeGitDir nextPath (gitSubDirToDir dir)
+        currentPath = joinPath xs
+        currentDir = Map.lookup currentPath ds
+        currentChildren Nothing = []
+        currentChildren (Just child) = [child]
+        next = Map.insertWith mergeGitDir nextPath subDir
+        subDir = GitDir { path=nextPath
+                        , commits=commits d
+                        , authors=authors d
+                        , additions=additions d
+                        , deletions=deletions d
+                        , children=currentChildren currentDir
+                        }
 
