@@ -95,7 +95,7 @@ toFilesPanel rows = P.toPanel dimensions (header:rows)
 toFPanelArgs :: String -> [GitFile]-> [[String]]
 toFPanelArgs dir = List.map toStatLine . take 15 . sortGitFilesByCommits
   where toStatLine = shortenFN . gitFileToStatLine
-        shortenFN (x:xs)= shortenFileName' dir x:xs
+        shortenFN (x:xs)= shortenFileName filePanelPathLen dir x:xs
 
 toDirPanel :: [[String]] -> [String]
 toDirPanel rows = P.toPanel dimensions (header:rows)
@@ -185,4 +185,3 @@ getGitFile p = lookupWithDefault (createGitFile p) p
 ------------------
 
 
-shortenFileName' = shortenFileName filePanelPathLen
