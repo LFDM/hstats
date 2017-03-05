@@ -107,8 +107,7 @@ toDirPanelArgs rootDir dir = List.map toStat $ gitDirToNormalizedSortedList dir
   where toStat (Nothing, d) = render "" d
         toStat (Just p, d) = render (getGitDirPath p) d
         render pPath = (shortenFN pPath) . gitDirToStatLine
-        -- shortenFN (x:xs) = shortenFileName' rootDir x:xs
-        shortenFN pPath (x:xs) = replaceLeading pPath " " x:xs
+        shortenFN pPath (x:xs) = drop (length rootDir) (replaceLeading pPath " " x):xs
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines
