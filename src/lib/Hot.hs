@@ -104,7 +104,7 @@ toDirPanel rows = P.toPanel dimensions (header:rows)
 
 toDirPanelArgs :: String -> GitDir -> [[String]]
 toDirPanelArgs rootDir dir = zipWith merge paths stats
-  where stats = List.map (gitDirToStatLine . snd) $ gitDirToNormalizedSortedList dir
+  where stats = List.map gitDirToStatLine $ gitDirToNormalizedSortedList dir
         paths = renderAsTree . (gitDirToSortedPathTree "") $ dir
         merge p (_:xs) = p:xs
 

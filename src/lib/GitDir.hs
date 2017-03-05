@@ -90,15 +90,11 @@ mergeAuthors = mergeUnique `on` authors
 
 sumMap f = sum . List.map f
 
-gitDirToNormalizedSortedList :: GitDir -> [(Maybe GitDir, GitDir)]
-gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' Nothing
-
-
-gitDirToNormalizedSortedList' :: Maybe GitDir -> GitDir -> [(Maybe GitDir, GitDir)]
-gitDirToNormalizedSortedList' par d = withChildren par d $ sortGitDirsByCommits (children d)
-  where withChildren p x [] = [(p, x)]
-        withChildren p x (y:[]) = gitDirToNormalizedSortedList' p y
-        withChildren p x ys = (p, x):concatMap (gitDirToNormalizedSortedList' (Just x)) ys
+gitDirToNormalizedSortedList :: GitDir -> [GitDir]
+gitDirToNormalizedSortedList d = withChildren d $ sortGitDirsByCommits (children d)
+  where withChildren x [] = [x]
+        withChildren x (y:[]) = gitDirToNormalizedSortedList y
+        withChildren x ys = x:concatMap gitDirToNormalizedSortedList ys
 
 gitDirToSortedPathTree :: String -> GitDir -> StringTree
 gitDirToSortedPathTree parentPath d = STN (toPath, List.map (gitDirToSortedPathTree (path d)) cs)
