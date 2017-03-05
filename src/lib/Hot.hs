@@ -69,8 +69,8 @@ printStats timeframe dir accuracy = do
   putStrLn $ P.join . toFilesPanel . toFPanelArgs fullDir $ files
   putStrLn ""
 
-  let dir = collectDirs files
-  putStrLn $ P.join . toDirPanel . toDirPanelArgs fullDir $ dir
+  let dir = collectDirs fullDir files
+  putStrLn $ P.join . toDirPanel . toDirPanelArgs2 fullDir $ dir
   putStrLn ""
 
   stop <- getCurrentTime
@@ -108,6 +108,12 @@ toDirPanelArgs rootDir dir = List.map toStat $ gitDirToNormalizedSortedList dir
         toStat (Just p, d) = render (getGitDirPath p) d
         render pPath = (shortenFN pPath) . gitDirToStatLine
         shortenFN pPath (x:xs) = drop (length rootDir) (replaceLeading pPath " " x):xs
+
+toDirPanelArgs2 :: String -> GitDir -> [[String]]
+toDirPanelArgs2 rootDir dir = zipWith merge paths stats
+  where stats = List.map (gitDirToStatLine . snd) $ gitDirToNormalizedSortedList dir
+        paths = renderAsTree . (gitDirToSortedPathTree rootDir) $ dir
+        merge p (_:xs) = p:xs
 
 parseGitOutput :: String -> [Commit]
 parseGitOutput = reverse . takeResult . processLines . lines
@@ -187,4 +193,3 @@ getGitFile p = lookupWithDefault (createGitFile p) p
 
 
 shortenFileName' = shortenFileName filePanelPathLen
-

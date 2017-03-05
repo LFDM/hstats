@@ -19,7 +19,7 @@ import System.FilePath
 
 import Commit
 import GitFile
-import Util (lookupWithDefault, mergeUnique, sortByAccessorDesc, StringTree(..))
+import Util (lookupWithDefault, mergeUnique, sortByAccessorDesc, removeLeading, removeLeadingSlash, StringTree(..))
 
 data GitDir = GitDir { path :: String
                      , commits :: [Commit]
@@ -100,9 +100,10 @@ gitDirToNormalizedSortedList' par d = withChildren par d $ sortGitDirsByCommits 
         withChildren p x (y:[]) = gitDirToNormalizedSortedList' p y
         withChildren p x ys = (p, x):concatMap (gitDirToNormalizedSortedList' (Just x)) ys
 
-gitDirToSortedPathTree :: GitDir -> StringTree
-gitDirToSortedPathTree d = STN (path d, List.map gitDirToSortedPathTree cs)
+gitDirToSortedPathTree :: String -> GitDir -> StringTree
+gitDirToSortedPathTree parentPath d = STN (toPath, List.map (gitDirToSortedPathTree (path d)) cs)
   where cs = sortGitDirsByCommits $ children d
+        toPath = removeLeadingSlash . (removeLeading parentPath) $ path d
 
 sortGitDirsByCommits :: [GitDir] -> [GitDir]
 sortGitDirsByCommits = sortByAccessorDesc $ length . commits
