@@ -90,14 +90,24 @@ mergeAuthors = mergeUnique `on` authors
 
 sumMap f = sum . List.map f
 
-gitDirToNormalizedSortedList :: GitDir -> [GitDir]
-gitDirToNormalizedSortedList d = withChildren d $ sortGitDirsByCommits (children d)
-  where withChildren x ys = x:concatMap gitDirToNormalizedSortedList ys
+gitDirToNormalizedSortedList :: Int -> GitDir -> [GitDir]
+gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' 0
 
-gitDirToSortedPathTree :: String -> GitDir -> StringTree
-gitDirToSortedPathTree parentPath d = STN (toPath, List.map (gitDirToSortedPathTree (path d)) cs)
-  where cs = sortGitDirsByCommits $ children d
+gitDirToNormalizedSortedList' :: Int -> Int -> GitDir -> [GitDir]
+gitDirToNormalizedSortedList' currDepth maxDepth d = if currDepth < maxDepth then run else []
+  where run = withChildren d $ sortGitDirsByCommits (children d)
+        withChildren x ys = x:concatMap next ys
+        next = gitDirToNormalizedSortedList' (currDepth + 1) maxDepth
+
+gitDirToSortedPathTree :: Int -> String -> GitDir -> StringTree
+gitDirToSortedPathTree = gitDirToSortedPathTree' 0
+
+gitDirToSortedPathTree' :: Int -> Int -> String -> GitDir -> StringTree
+gitDirToSortedPathTree' currDepth maxDepth parentPath d = run
+  where run = STN (toPath, if currDepth < maxDepth then List.map next cs else [])
+        cs = sortGitDirsByCommits $ children d
         toPath = removeLeadingSlash . (removeLeading parentPath) $ path d
+        next = gitDirToSortedPathTree' (currDepth + 1) maxDepth (path d)
 
 sortGitDirsByCommits :: [GitDir] -> [GitDir]
 sortGitDirsByCommits = sortByAccessorDesc $ length . commits

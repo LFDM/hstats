@@ -51,8 +51,8 @@ gitRoot = readProcess cmd args []
         args = [ "rev-parse", "--show-prefix"]
 
 
-printStats :: String -> String -> String -> IO ()
-printStats timeframe dir accuracy = do
+printStats :: String -> String -> Int -> String -> IO ()
+printStats timeframe dir depth accuracy = do
   start <- getCurrentTime
   gitOutput <- gitLog timeframe dir accuracy
   rootDir <- gitRoot
@@ -70,7 +70,7 @@ printStats timeframe dir accuracy = do
   putStrLn ""
 
   let dir = collectDirs fullDir files
-  putStrLn $ P.join . toDirPanel . toDirPanelArgs fullDir $ dir
+  putStrLn $ P.join . toDirPanel . toDirPanelArgs depth fullDir $ dir
   putStrLn ""
 
   stop <- getCurrentTime
@@ -102,10 +102,10 @@ toDirPanel rows = P.toPanel dimensions (header:rows)
   where dimensions = [64, 6, 6, 8, 8, 8]
         header = ["Top Dirs", "Com", "Auth", "+", "-", "+/-"]
 
-toDirPanelArgs :: String -> GitDir -> [[String]]
-toDirPanelArgs rootDir dir = zipWith merge paths stats
-  where stats = List.map gitDirToStatLine $ gitDirToNormalizedSortedList dir
-        paths = renderAsTree . (gitDirToSortedPathTree "") $ dir
+toDirPanelArgs :: Int -> String -> GitDir -> [[String]]
+toDirPanelArgs depth rootDir dir = zipWith merge paths stats
+  where stats = List.map gitDirToStatLine $ gitDirToNormalizedSortedList depth dir
+        paths = renderAsTree . (gitDirToSortedPathTree depth "") $ dir
         merge p (_:xs) = p:xs
 
 parseGitOutput :: String -> [Commit]

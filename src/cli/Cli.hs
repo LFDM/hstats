@@ -40,11 +40,11 @@ loc [] = Loc.printLineCountsAtPath "."
 loc (x:xs) = Loc.printLineCountsAtPath x
 
 hot :: Command
-hot [] = Hot.printStats "1-week" "" ""
-hot (x:[]) = Hot.printStats x "" ""
-hot (x:y:[]) = Hot.printStats x y ""
-hot (x:y:z:[]) = Hot.printStats x y z
-
+hot [] = Hot.printStats "1-week" "" 100 ""
+hot (dur:[]) = Hot.printStats dur "" 100 ""
+hot (dur:p:[]) = Hot.printStats dur p 100 ""
+hot (dur:p:limit:[]) = Hot.printStats dur p (toInt limit) ""
+hot (dur:p:limit:acc:[]) = Hot.printStats dur p (toInt limit) acc
 
 unknown :: Command
 unknown args = putStr $ nl (inRed "Unknown command")
@@ -57,4 +57,6 @@ logCmd cmd args = putStr $ nl (unwords output)
                  , inYellow $ unwords args
                  ]
 
+toInt :: String -> Int
+toInt i = read i :: Int
 
