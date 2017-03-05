@@ -93,7 +93,6 @@ sumMap f = sum . List.map f
 gitDirToNormalizedSortedList :: GitDir -> [GitDir]
 gitDirToNormalizedSortedList d = withChildren d $ sortGitDirsByCommits (children d)
   where withChildren x [] = [x]
-        withChildren x (y:[]) = gitDirToNormalizedSortedList y
         withChildren x ys = x:concatMap gitDirToNormalizedSortedList ys
 
 gitDirToSortedPathTree :: String -> GitDir -> StringTree
