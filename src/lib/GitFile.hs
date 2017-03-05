@@ -1,6 +1,7 @@
 module GitFile
 ( GitFile
 , createGitFile
+, createGitFile'
 , addToGitFile
 , getGitFilePath
 , getGitFileAuthors
@@ -25,6 +26,8 @@ data GitFile = GitFile { path :: String
 createGitFile :: String -> GitFile
 createGitFile p = GitFile { path=p, commits=[], authors=[], additions=0, deletions=0 }
 
+createGitFile' = GitFile
+
 addToGitFile :: Commit -> Int -> Int -> GitFile -> GitFile
 addToGitFile c a d f = GitFile { path=(path f)
                                , commits=c:commits f
@@ -34,7 +37,6 @@ addToGitFile c a d f = GitFile { path=(path f)
                                }
   where nextA = (additions f) + a
         nextD = (deletions f) + d
-
 
 getGitFileCommits :: GitFile -> [Commit]
 getGitFileCommits = commits

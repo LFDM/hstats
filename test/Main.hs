@@ -4,6 +4,7 @@ import Test.Tasty.QuickCheck
 import qualified Test.Tasty.SmallCheck as SC
 
 import qualified UtilTest as UtilTest
+import qualified GitDirTest as GitDirTest
 
 arith :: Integer -> Integer -> Property
 arith x y = (x > 0) && (y > 0) ==> (x+y)^2 > x^2 + y^2
@@ -28,6 +29,7 @@ suites = [ units
          , quickchecks
          , smallchecks
          , UtilTest.suite
+         , GitDirTest.suite
          ]
 
 suite :: TestTree

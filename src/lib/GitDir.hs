@@ -1,27 +1,24 @@
 module GitDir
 ( GitDir
-, createGitDir
-, addToGitDir
-, addGitSubDir
-, addGitSubDir'
 , gitSubDirToDir
 , getGitDirPath
 , getGitDirChildren
 , getGitDirAuthors
 , getGitDirAdditions
 , getGitDirDeletions
-, getGitDirCommits
-, mergeGitDir
-, gitDirToStatLine
+, getGitDirCommits , mergeGitDir , gitDirToStatLine
 , gitDirToNormalizedSortedList
+, collectDirs
 ) where
 
 import Data.Function
+import Data.Map as Map
+import Data.List as List
 import System.FilePath
 
 import Commit
 import GitFile
-import Util (mergeUnique, sortByAccessorDesc)
+import Util (lookupWithDefault, mergeUnique, sortByAccessorDesc)
 
 data GitDir = GitDir { path :: String
                      , commits :: [Commit]
@@ -74,13 +71,13 @@ addGitSubDir par sub = GitDir { path=path par
 
 addGitSubDir' sub par = addGitSubDir par sub
 
-gitSubDirToDir :: GitDir -> GitDir
-gitSubDirToDir s = GitDir { path=joinPath . init . splitDirectories . path $ s
+gitSubDirToDir :: Bool -> GitDir -> GitDir
+gitSubDirToDir isDirectChild s = GitDir { path=joinPath . init . splitDirectories . path $ s
                           , commits=commits s
                           , authors=authors s
                           , additions=additions s
                           , deletions=deletions s
-                          , children=[s]
+                          , children= if isDirectChild then [s] else []
                           }
 
 getGitDirPath = path
@@ -91,7 +88,7 @@ getGitDirDeletions = deletions
 getGitDirCommits = commits
 
 gitDirToStatLine :: GitDir -> [String]
-gitDirToStatLine d = (path d):foldr showStat [] accs
+gitDirToStatLine d = (path d):List.foldr showStat [] accs
   where showStat x y = (show . x) d:y
         accs = [(length . commits), (length . authors), additions, deletions, diff]
         diff x = additions x - deletions x
@@ -99,7 +96,7 @@ gitDirToStatLine d = (path d):foldr showStat [] accs
 mergeCommits = mergeUnique `on` commits
 mergeAuthors = mergeUnique `on` authors
 
-sumMap f = sum . map f
+sumMap f = sum . List.map f
 
 gitDirToNormalizedSortedList :: GitDir -> [(Maybe GitDir, GitDir)]
 gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' Nothing
@@ -114,4 +111,35 @@ gitDirToNormalizedSortedList' par d = withChildren par d $ sortGitDirsByCommits 
 
 sortGitDirsByCommits :: [GitDir] -> [GitDir]
 sortGitDirsByCommits = sortByAccessorDesc $ length . commits
+
+
+-- while we could create the tree on the fly, it's cheaper to
+-- do a second pass, otherwise we create a lot of intermediary objects
+collectDirs :: [GitFile] -> GitDir
+collectDirs = toDirTree . Prelude.foldr collectDirsFromFile Map.empty
+
+collectDirsFromFile :: GitFile -> Map String GitDir -> Map String GitDir
+collectDirsFromFile f = addDir pDirs f
+  where pDirs = init . splitDirectories . getGitFilePath $ f
+        addDir [] _ z = z
+        addDir ps y z = addDir (init ps) y $ insert (joinPath ps) y z
+        insert k y z = Map.insert k (merge k y z) z
+        merge k y z = addToGitDir y $ lookupWithDefault (empty k) k z
+        empty = createGitDir
+
+
+toDirTree :: Map String GitDir -> GitDir
+toDirTree ds = unpack $ List.foldr addParents ds (Map.toList ds)
+  where empty = createGitDir ""
+        unpack = lookupWithDefault empty ""
+
+addParents :: (String, GitDir) -> Map String GitDir -> Map String GitDir
+addParents (p, d) = addToParents' True pPaths d
+  where pPaths = "":splitDirectories p
+
+addToParents' :: Bool -> [String] -> GitDir -> Map String GitDir -> Map String GitDir
+addToParents' isDirectChild [] _ ds = ds
+addToParents' isDirectChild xs s ds = addToParents' False pPaths s $ next ds
+  where pPaths = init xs
+        next = Map.insertWith mergeGitDir (concat pPaths) (gitSubDirToDir isDirectChild s)
 
