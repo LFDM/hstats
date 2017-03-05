@@ -106,8 +106,10 @@ renderAsTree' :: (String -> String) -> StringTree -> [String]
 renderAsTree' f = renderAsTreeRec f 0
 
 renderAsTreeRec :: (String -> String) -> Int -> StringTree -> [String]
-renderAsTreeRec f level (STN (s, cs)) = ((prefix level) ++ f s):concatMap (renderAsTreeRec f (level + 1)) cs
+renderAsTreeRec f level (STN (s, cs)) = current:nextLevel
   where prefix 0 = ""
-        prefix 1 = "- "
-        prefix l = unwords (replicate (l - 1) " ") ++ " - "
+        prefix 1 = "└ "
+        prefix l = unwords (replicate (l - 1) " ") ++ " └ "
+        current = (prefix level) ++ f s
+        nextLevel = concatMap (renderAsTreeRec f (level + 1)) cs
 
