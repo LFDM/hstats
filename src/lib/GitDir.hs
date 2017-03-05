@@ -7,6 +7,7 @@ module GitDir
 , getGitDirDeletions
 , getGitDirCommits , mergeGitDir , gitDirToStatLine
 , gitDirToNormalizedSortedList
+, gitDirToSortedPathTree
 , collectDirs
 , collectDirFromFile
 ) where
