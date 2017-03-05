@@ -95,9 +95,9 @@ gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' Nothing
 
 gitDirToNormalizedSortedList' :: Maybe GitDir -> GitDir -> [(Maybe GitDir, GitDir)]
 gitDirToNormalizedSortedList' par d = withChildren par d $ sortGitDirsByCommits (children d)
-  where withChildren p x [] = concat [[(p, x)], [(Nothing, createGitDir "YYY")]]
+  where withChildren p x [] = [(p, x)]
         withChildren p x (y:[]) = gitDirToNormalizedSortedList' p y
-        withChildren p x ys = (p, x):concat [concatMap (gitDirToNormalizedSortedList' (Just x)) ys, [(Nothing, createGitDir "XXX")]]
+        withChildren p x ys = (p, x):concatMap (gitDirToNormalizedSortedList' (Just x)) ys
 
 sortGitDirsByCommits :: [GitDir] -> [GitDir]
 sortGitDirsByCommits = sortByAccessorDesc $ length . commits
