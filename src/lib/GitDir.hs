@@ -18,7 +18,7 @@ import System.FilePath
 
 import Commit
 import GitFile
-import Util (lookupWithDefault, mergeUnique, sortByAccessorDesc)
+import Util (lookupWithDefault, mergeUnique, sortByAccessorDesc, StringTree(..))
 
 data GitDir = GitDir { path :: String
                      , commits :: [Commit]
@@ -99,6 +99,10 @@ gitDirToNormalizedSortedList' par d = withChildren par d $ sortGitDirsByCommits 
         withChildren p x (y:[]) = gitDirToNormalizedSortedList' p y
         withChildren p x ys = (p, x):concatMap (gitDirToNormalizedSortedList' (Just x)) ys
 
+gitDirToSortedPathTree :: GitDir -> StringTree
+gitDirToSortedPathTree d = STN (path d, List.map gitDirToSortedPathTree cs)
+  where cs = sortGitDirsByCommits $ children d
+
 sortGitDirsByCommits :: [GitDir] -> [GitDir]
 sortGitDirsByCommits = sortByAccessorDesc $ length . commits
 
@@ -107,8 +111,8 @@ sortGitDirsByCommits = sortByAccessorDesc $ length . commits
 -- do a second pass, otherwise we create a lot of intermediary objects
 -- We therefore just create all directories that contain actual files and
 -- then organize them as a tree
-collectDirs :: [GitFile] -> GitDir
-collectDirs = toDirTree . Prelude.foldr collectDirFromFile Map.empty
+collectDirs :: String -> [GitFile] -> GitDir
+collectDirs root = (toDirTree root) . Prelude.foldr collectDirFromFile Map.empty
 
 collectDirFromFile :: GitFile -> Map String GitDir -> Map String GitDir
 collectDirFromFile f = insert (dir f)
@@ -117,10 +121,10 @@ collectDirFromFile f = insert (dir f)
         merge k ds = addToGitDir f $ lookupWithDefault (empty k) k ds
         empty = createGitDir
 
-toDirTree :: Map String GitDir -> GitDir
-toDirTree ds = unpack $ List.foldr addToParents ds (Map.toList ds)
-  where empty = createGitDir ""
-        unpack = lookupWithDefault empty ""
+toDirTree :: String -> Map String GitDir -> GitDir
+toDirTree root ds = unpack $ List.foldr addToParents ds (Map.toList ds)
+  where empty = createGitDir root
+        unpack = lookupWithDefault empty root
 
 addToParents :: (String, GitDir) -> Map String GitDir -> Map String GitDir
 addToParents (p, d) = addToParents' pPaths True d

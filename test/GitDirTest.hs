@@ -39,29 +39,30 @@ suite = testGroup "GitDir"
     ]
   ]
 
-gitDirRootTest = "" @=? actual
-  where actual = getGitDirPath $ collectDirs files
+collectDirs' = collectDirs ""
+gitDirRootTest = "root" @=? actual
+  where actual = getGitDirPath $ collectDirs "root" files
 
 gitDirRootAddTest = 31 @=? actual
-  where actual = getGitDirAdditions $ collectDirs files
+  where actual = getGitDirAdditions $ collectDirs' files
 
 gitDirRootDelTest = 310 @=? actual
-  where actual = getGitDirDeletions $ collectDirs files
+  where actual = getGitDirDeletions $ collectDirs' files
 
 gitDirRootChildrenLengthTest = 2 @=? actual
-  where actual = length . getGitDirChildren . collectDirs $ files
+  where actual = length . getGitDirChildren . collectDirs' $ files
 
 gitDirRootChildrenPathTest = ["b", "a"] @=? actual
-  where actual = toPaths  . getGitDirChildren . collectDirs $ files
+  where actual = toPaths  . getGitDirChildren . collectDirs' $ files
 
 gitDirRootChildrenAdditionTest = 15 @=? actual
-  where actual = getGitDirAdditions . takeSecond . getGitDirChildren . collectDirs $ files
+  where actual = getGitDirAdditions . takeSecond . getGitDirChildren . collectDirs' $ files
 
 gitDirRootGrandchildrenLengthTest = 2 @=? actual
-  where actual = length . (getGrandchildren takeSecond) . collectDirs $ files
+  where actual = length . (getGrandchildren takeSecond) . collectDirs' $ files
 
 gitDirRootGrandchildrenPathTest = ["a/2", "a/1"] @=? actual
-  where actual = toPaths . (getGrandchildren takeSecond) . collectDirs $ files
+  where actual = toPaths . (getGrandchildren takeSecond) . collectDirs' $ files
 
 collectDirFromFileLengthTest = 1 @=? actual
   where actual = length . Map.toList $ collectDirFromFile a11 Map.empty
