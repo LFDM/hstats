@@ -112,7 +112,7 @@ toDirPanelArgs rootDir dir = List.map toStat $ gitDirToNormalizedSortedList dir
 toDirPanelArgs2 :: String -> GitDir -> [[String]]
 toDirPanelArgs2 rootDir dir = zipWith merge paths stats
   where stats = List.map (gitDirToStatLine . snd) $ gitDirToNormalizedSortedList dir
-        paths = renderAsTree . (gitDirToSortedPathTree rootDir) $ dir
+        paths = renderAsTree . (gitDirToSortedPathTree "") $ dir
         merge p (_:xs) = p:xs
 
 parseGitOutput :: String -> [Commit]
