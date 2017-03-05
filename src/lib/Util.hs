@@ -17,6 +17,8 @@ module Util
 , trim
 , sortByAccessorDesc
 , shortenFileName
+, renderAsTree
+, StringTree(STN)
 ) where
 
 import Data.Char
@@ -93,4 +95,19 @@ shortenFileName maxLen rootDir n = shortenWithEllipsis maxLen (dropPrefix n)
 sortByAccessorDesc :: (Ord b) => (a -> b) -> [a] -> [a]
 sortByAccessorDesc f = List.sortBy (check `on` f)
   where check = flip compare
+
+
+data StringTree = STN (String, [StringTree])
+
+renderAsTree :: StringTree -> [String]
+renderAsTree = renderAsTreeRec id 0
+
+renderAsTree' :: (String -> String) -> StringTree -> [String]
+renderAsTree' f = renderAsTreeRec f 0
+
+renderAsTreeRec :: (String -> String) -> Int -> StringTree -> [String]
+renderAsTreeRec f level (STN (s, cs)) = ((prefix level) ++ f s):concatMap (renderAsTreeRec f (level + 1)) cs
+  where prefix 0 = ""
+        prefix 1 = "- "
+        prefix l = unwords (replicate (l - 1) " ") ++ " - "
 
