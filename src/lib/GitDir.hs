@@ -9,6 +9,7 @@ module GitDir
 , getGitDirCommits , mergeGitDir , gitDirToStatLine
 , gitDirToNormalizedSortedList
 , collectDirs
+, collectDirFromFile
 ) where
 
 import Data.Function
@@ -71,13 +72,13 @@ addGitSubDir par sub = GitDir { path=path par
 
 addGitSubDir' sub par = addGitSubDir par sub
 
-gitSubDirToDir :: Bool -> GitDir -> GitDir
-gitSubDirToDir isDirectChild s = GitDir { path=joinPath . init . splitDirectories . path $ s
+gitSubDirToDir :: GitDir -> GitDir
+gitSubDirToDir s = GitDir { path=joinPath . init . splitDirectories . path $ s
                           , commits=commits s
                           , authors=authors s
                           , additions=additions s
                           , deletions=deletions s
-                          , children= if isDirectChild then [s] else []
+                          , children= [s]
                           }
 
 getGitDirPath = path
@@ -115,31 +116,37 @@ sortGitDirsByCommits = sortByAccessorDesc $ length . commits
 
 -- while we could create the tree on the fly, it's cheaper to
 -- do a second pass, otherwise we create a lot of intermediary objects
+-- We therefore just create all directories that contain actual files and
+-- then organize them as a tree
 collectDirs :: [GitFile] -> GitDir
-collectDirs = toDirTree . Prelude.foldr collectDirsFromFile Map.empty
+collectDirs = toDirTree . Prelude.foldr collectDirFromFile Map.empty
 
-collectDirsFromFile :: GitFile -> Map String GitDir -> Map String GitDir
-collectDirsFromFile f = addDir pDirs f
-  where pDirs = init . splitDirectories . getGitFilePath $ f
-        addDir [] _ z = z
-        addDir ps y z = addDir (init ps) y $ insert (joinPath ps) y z
-        insert k y z = Map.insert k (merge k y z) z
-        merge k y z = addToGitDir y $ lookupWithDefault (empty k) k z
+collectDirFromFile :: GitFile -> Map String GitDir -> Map String GitDir
+collectDirFromFile f = insert (dir f)
+  where dir = joinPath . init . splitDirectories . getGitFilePath
+        insert k ds = Map.insert k (merge k ds) ds
+        merge k ds = addToGitDir f $ lookupWithDefault (empty k) k ds
         empty = createGitDir
 
+-- a/1
+-- b/2
+--
+  -- take a -> merge with subdir of a/1
 
 toDirTree :: Map String GitDir -> GitDir
-toDirTree ds = unpack $ List.foldr addParents ds (Map.toList ds)
+toDirTree ds = unpack $ List.foldr addToParents ds toSplitKeys
   where empty = createGitDir ""
         unpack = lookupWithDefault empty ""
+        toSplitKeys = List.map (\p -> "":splitDirectories p) $ keys ds
 
-addParents :: (String, GitDir) -> Map String GitDir -> Map String GitDir
-addParents (p, d) = addToParents' True pPaths d
-  where pPaths = "":splitDirectories p
-
-addToParents' :: Bool -> [String] -> GitDir -> Map String GitDir -> Map String GitDir
-addToParents' isDirectChild [] _ ds = ds
-addToParents' isDirectChild xs s ds = addToParents' False pPaths s $ next ds
+-- "", "a", "b", "c"
+addToParents :: [String] -> Map String GitDir -> Map String GitDir
+addToParents [] ds = ds
+addToParents (x:[]) ds = ds
+addToParents xs ds = addToParents pPaths $ next ds
   where pPaths = init xs
-        next = Map.insertWith mergeGitDir (concat pPaths) (gitSubDirToDir isDirectChild s)
+        currentPath = joinPath xs
+        nextPath = joinPath pPaths
+        dir = lookupWithDefault (createGitDir currentPath) currentPath ds
+        next = Map.insertWith mergeGitDir nextPath (gitSubDirToDir dir)
 
