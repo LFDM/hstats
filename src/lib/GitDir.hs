@@ -94,7 +94,7 @@ gitDirToNormalizedSortedList :: Int -> GitDir -> [GitDir]
 gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' 0
 
 gitDirToNormalizedSortedList' :: Int -> Int -> GitDir -> [GitDir]
-gitDirToNormalizedSortedList' currDepth maxDepth d = if currDepth < maxDepth then run else []
+gitDirToNormalizedSortedList' currDepth maxDepth d = if currDepth <= maxDepth then run else []
   where run = withChildren d $ sortGitDirsByCommits (children d)
         withChildren x ys = x:concatMap next ys
         next = gitDirToNormalizedSortedList' (currDepth + 1) maxDepth
