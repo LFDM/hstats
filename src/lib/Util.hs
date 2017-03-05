@@ -124,11 +124,8 @@ renderAsTreeRec f level isLast (STN (s, cs)) = current:nextLevel
 normalizePipes :: [String] -> [String]
 normalizePipes [] = []
 normalizePipes (x:[]) = [x]
-normalizePipes (x:xs) = x:normalizePipes' (head xs) x:normalizePipes (tail xs)
-
-
--- a b c
--- b a = a -> b a -> c
+normalizePipes (x:xs) = x:normalizePipes (next:tail xs)
+  where next = normalizePipes' (head xs) x
 
 normalizePipes' :: String -> String -> String
 normalizePipes' a b = List.foldr tryReplace a is
