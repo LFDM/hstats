@@ -19,6 +19,7 @@ module Util
 , shortenFileName
 , renderAsTree
 , StringTree(STN)
+, findLast
 ) where
 
 import Data.Char
@@ -97,19 +98,42 @@ sortByAccessorDesc f = List.sortBy (check `on` f)
   where check = flip compare
 
 
-data StringTree = STN (String, [StringTree])
+data StringTree = STN (String, [StringTree]) deriving (Show)
+
+instance Eq StringTree where
+  x == y = isEqualStringTree x y
+
+isEqualStringTree :: StringTree -> StringTree -> Bool
+isEqualStringTree (STN (p1, cs1)) (STN (p2, cs2)) = p1 == p2 && cs1 == cs2
 
 renderAsTree :: StringTree -> [String]
-renderAsTree = renderAsTreeRec id 0
+renderAsTree = renderAsTreeRec id 0 True
 
 renderAsTree' :: (String -> String) -> StringTree -> [String]
-renderAsTree' f = renderAsTreeRec f 0
+renderAsTree' f = renderAsTreeRec f 0 True
 
-renderAsTreeRec :: (String -> String) -> Int -> StringTree -> [String]
-renderAsTreeRec f level (STN (s, cs)) = current:nextLevel
+renderAsTreeRec :: (String -> String) -> Int -> Bool -> StringTree -> [String]
+renderAsTreeRec f level isLast (STN (s, cs)) = current:nextLevel
   where prefix 0 = ""
-        prefix 1 = "└ "
-        prefix l = unwords (replicate (l - 1) " ") ++ " └ "
+        prefix 1 = unwords [sign, ""]
+        prefix l = unwords $ concat [(replicate (l - 1) "│"), [sign, ""]]
+        sign = if isLast then "└" else "├"
         current = (prefix level) ++ f s
-        nextLevel = concatMap (renderAsTreeRec f (level + 1)) cs
+        nextLevel = concatMap renderNext cs
+        renderNext c = renderAsTreeRec f (level + 1) (c == (last cs)) c
+
+-- normalizePipes :: [String] -> [String]
+-- normalizePipes ss = normalize (length ss - 1) []
+--   where normalize i r = normalizePipes' ss!i ss!(i -1):r
+--      normalize 0 r = ss!0:r
+
+-- normalizePipes' :: String -> String -> String
+-- normalizePipes' a b = a
+
+findLast :: (Eq a) => (a -> Bool) -> [a] -> Maybe Int
+findLast f l = findLast' (length l - 1) f l
+
+findLast' i f l
+  | i < 0 = Nothing
+  | otherwise = if f (l!!i) then (Just i) else findLast' (i - 1) f l
 
