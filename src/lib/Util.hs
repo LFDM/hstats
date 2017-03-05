@@ -19,7 +19,6 @@ module Util
 , shortenFileName
 , renderAsTree
 , StringTree(STN)
-, findLast
 ) where
 
 import Data.Char
@@ -107,10 +106,10 @@ isEqualStringTree :: StringTree -> StringTree -> Bool
 isEqualStringTree (STN (p1, cs1)) (STN (p2, cs2)) = p1 == p2 && cs1 == cs2
 
 renderAsTree :: StringTree -> [String]
-renderAsTree = renderAsTreeRec id 0 True
+renderAsTree = renderAsTree' id
 
 renderAsTree' :: (String -> String) -> StringTree -> [String]
-renderAsTree' f = renderAsTreeRec f 0 True
+renderAsTree' f = normalizePipes . renderAsTreeRec f 0 True
 
 renderAsTreeRec :: (String -> String) -> Int -> Bool -> StringTree -> [String]
 renderAsTreeRec f level isLast (STN (s, cs)) = current:nextLevel
@@ -122,18 +121,18 @@ renderAsTreeRec f level isLast (STN (s, cs)) = current:nextLevel
         nextLevel = concatMap renderNext cs
         renderNext c = renderAsTreeRec f (level + 1) (c == (last cs)) c
 
--- normalizePipes :: [String] -> [String]
--- normalizePipes ss = normalize (length ss - 1) []
---   where normalize i r = normalizePipes' ss!i ss!(i -1):r
---      normalize 0 r = ss!0:r
+normalizePipes :: [String] -> [String]
+normalizePipes ss = reverse $ normalize ((length ss) - 1) []
+  where normalize 0 r = ss!!0:r
+        normalize i r = normalizePipes' (ss!!i) (ss!!(i - 1)):normalize (i - 1) r
 
--- normalizePipes' :: String -> String -> String
--- normalizePipes' a b = a
+normalizePipes' :: String -> String -> String
+normalizePipes' a b = List.foldr tryReplace a is
+  where is = elemIndices '│' a
+        tryReplace i x = if isReplaceable i b then replace i " " x else x
+        isReplaceable i x = i < (length x) && ((x!!i) == ' ' || (x!!i) == '└')
 
-findLast :: (Eq a) => (a -> Bool) -> [a] -> Maybe Int
-findLast f l = findLast' (length l - 1) f l
-
-findLast' i f l
-  | i < 0 = Nothing
-  | otherwise = if f (l!!i) then (Just i) else findLast' (i - 1) f l
-
+replace :: Int -> [a] -> [a] -> [a]
+replace i x xs
+  | i < (length xs) = (take i xs) ++ x ++ (drop (i + 1) xs)
+  | otherwise = xs

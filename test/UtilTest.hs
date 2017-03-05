@@ -43,10 +43,6 @@ suite = testGroup "Util"
     , testCase "formats strings in a nice tree shape 3" $ renderAsTreeTest3
     , testCase "formats strings in a nice tree shape 4" $ renderAsTreeTest4
     ]
-  , testGroup "findLast"
-    [ testCase "finds last occurence in a list like structure" $ findLastTest1
-    , testCase "returns nothing when there's no occurence" $ findLastTest2
-    ]
   ]
 
 renderAsTreeTest1 = actual @=? expected
@@ -83,8 +79,3 @@ renderAsTreeTest4 = actual @=? expected
         input = STN ("x", [STN ("a", [STN ("1", [STN ("A", [])]), STN ("2", [STN ("B", [])])]), STN ("b", []) ])
         expected = renderAsTree input
 
-findLastTest1 = actual @=? (Just 1)
-  where actual = findLast (== 'c') "aca"
-
-findLastTest2 = actual @=? Nothing
-  where actual = findLast (== 'c') "aaa"
