@@ -4,6 +4,8 @@ module Commit
 , getCommitAuthor
 , getCommitFiles
 , getCommitMessage
+, getCommitAdditions
+, getCommitDeletions
 ) where
 
 import Data.Function (on)
@@ -35,4 +37,10 @@ getCommitFiles = files
 
 getCommitMessage :: Commit -> String
 getCommitMessage = msg
+
+getCommitAdditions :: Commit -> Int
+getCommitAdditions = sum . map getFSAdditions . files
+
+getCommitDeletions :: Commit -> Int
+getCommitDeletions = sum . map getFSDeletions . files
 

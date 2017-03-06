@@ -7,6 +7,7 @@ module Categories
 
 import Commit
 import CommitMsgParsers
+import FileStat
 import Util
 
 import Data.Map as Map
@@ -45,7 +46,12 @@ addCommitToCategory c ctg = Category { name=name ctg,
 categoryToStatLine :: Category -> [String]
 categoryToStatLine c = name c : List.foldr showStat [] accs
   where showStat x y = (show . x) c:y
-        accs = [length . commits]
+        accs = [length . commits, files, authors, add, del, diff]
+        authors = length . nub . List.map getCommitAuthor . commits
+        files = length . nub .  List.map getFSPath . List.concatMap getCommitFiles . commits
+        add = sum . List.map getCommitAdditions . commits
+        del = sum . List.map getCommitDeletions . commits
+        diff c = add c - del c
 
 sortCategoriesByCommits :: [Category] -> [Category]
 sortCategoriesByCommits = sortByAccessorDesc $ length . commits

@@ -113,8 +113,8 @@ toDirPanel rows = P.toPanel dimensions (header:rows)
 
 toCtgPanel :: [[String]] -> [String]
 toCtgPanel rows = P.toPanel dimensions (header:rows)
-  where dimensions = [64, 6]
-        header = ["Top Categories", "Com"]
+  where dimensions = [64, 6, 6, 6, 8, 8, 8]
+        header = ["Top Categories", "Com", "Files", "Auth", "+", "-", "+/-"]
 
 toCtgPanelArgs :: [Category]-> [[String]]
 toCtgPanelArgs = List.map categoryToStatLine . take 15 . sortCategoriesByCommits
