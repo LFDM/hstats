@@ -64,8 +64,6 @@ printStats timeframe dir depth accuracy = do
   putStrLn ""
 
   let commits = parseGitOutput gitOutput
-  print $ length commits
-  print $ getCommitFiles $ head commits
   let contributors = collectContributors commits
   putStrLn $ P.join . toCommitterPanel . toComPanelArgs $ contributors
   putStrLn ""
