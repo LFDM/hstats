@@ -1,0 +1,11 @@
+- name: "fix"
+  matcher: "^fix"
+
+- name: "feat"
+  matcher: "^feat"
+
+- name: "refactor"
+  matcher: "^refactor"
+
+- name: "chore"
+  matcher: "^chore"

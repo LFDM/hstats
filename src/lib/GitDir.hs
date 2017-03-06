@@ -19,7 +19,14 @@ import System.FilePath
 
 import Commit
 import GitFile
-import Util (lookupWithDefault, mergeUnique, sortByAccessorDesc, removeLeading, removeLeadingSlash, StringTree(..))
+import Util ( lookupWithDefault
+            , mergeUnique
+            , sortByAccessorDesc
+            , removeLeading
+            , removeLeadingSlash
+            , StringTree(..)
+            , sumMap
+            )
 
 data GitDir = GitDir { path :: String
                      , commits :: [Commit]
@@ -87,8 +94,6 @@ gitDirToStatLine d = (path d):List.foldr showStat [] accs
 
 mergeCommits = mergeUnique `on` commits
 mergeAuthors = mergeUnique `on` authors
-
-sumMap f = sum . List.map f
 
 gitDirToNormalizedSortedList :: Int -> GitDir -> [GitDir]
 gitDirToNormalizedSortedList = gitDirToNormalizedSortedList' 0

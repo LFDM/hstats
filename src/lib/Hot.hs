@@ -19,6 +19,7 @@ import Contributor
 import Commit
 import GitFile
 import GitDir
+import Categories
 
 import Printer as P
 import Util
@@ -73,6 +74,9 @@ printStats timeframe dir depth accuracy = do
   putStrLn $ P.join . toDirPanel . toDirPanelArgs depth fullDir $ dir
   putStrLn ""
 
+  categories <- collectCategories commits
+  putStrLn $ P.join . toCtgPanel . toCtgPanelArgs $ categories
+
   stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
 
@@ -101,6 +105,14 @@ toDirPanel :: [[String]] -> [String]
 toDirPanel rows = P.toPanel dimensions (header:rows)
   where dimensions = [64, 6, 6, 8, 8, 8]
         header = ["Top Dirs", "Com", "Auth", "+", "-", "+/-"]
+
+toCtgPanel :: [[String]] -> [String]
+toCtgPanel rows = P.toPanel dimensions (header:rows)
+  where dimensions = [64, 6]
+        header = ["Top Categories", "Com"]
+
+toCtgPanelArgs :: [Category]-> [[String]]
+toCtgPanelArgs = List.map categoryToStatLine . take 15 . sortCategoriesByCommits
 
 toDirPanelArgs :: Int -> String -> GitDir -> [[String]]
 toDirPanelArgs depth rootDir dir = zipWith merge paths stats

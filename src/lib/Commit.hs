@@ -3,6 +3,7 @@ module Commit
 , createCommit
 , getCommitAuthor
 , getCommitFiles
+, getCommitMessage
 ) where
 
 import Data.Function (on)
@@ -29,4 +30,7 @@ getCommitAuthor = author
 
 getCommitFiles :: Commit -> [FileStat]
 getCommitFiles = files
+
+getCommitMessage :: Commit -> String
+getCommitMessage c = ""
 

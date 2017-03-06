@@ -11,7 +11,8 @@ copyright:           2017 Author name here
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
-data-files:          data/lineParsers.yaml
+data-files:          data/lineParsers.yaml,
+                     data/commitMsgPrefixes.yaml
 cabal-version:       >=1.10
 
 library
@@ -26,8 +27,11 @@ library
                        FileStat,
                        GitDir,
                        GitFile,
+                       Categories,
+                       CommitMsgParsers,
                        LineParsers,
                        Paths_hstats
+
 
   build-depends:       base >= 4.7 && < 5,
                        directory,

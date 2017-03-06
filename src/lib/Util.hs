@@ -18,6 +18,7 @@ module Util
 , sortByAccessorDesc
 , shortenFileName
 , renderAsTree
+, sumMap
 , StringTree(STN)
 ) where
 
@@ -137,3 +138,6 @@ replace :: Int -> [a] -> [a] -> [a]
 replace i x xs
   | i < (length xs) = (take i xs) ++ x ++ (drop (i + 1) xs)
   | otherwise = xs
+
+sumMap :: (a -> Int) -> [a] -> Int
+sumMap f = sum . List.map f
