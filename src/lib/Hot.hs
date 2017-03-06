@@ -135,9 +135,9 @@ processLines = Prelude.foldr processLine ("BEGIN", emptyLineData, [])
 
 processLine :: Line -> GitState -> GitState
 processLine l x@("BEGIN", _, _) = processCommit x "AUTHOR" l
-processLine l x@("AUTHOR", _, _) = processAuthor x "MSG" l
-processLine l x@("MSG", _, _) = processMsg x "DATE" l
-processLine l x@("DATE", _, _) = processDate x "STAT_BEGIN" l
+processLine l x@("AUTHOR", _, _) = processAuthor x "DATE" l
+processLine l x@("DATE", _, _) = processDate x "MSG" l
+processLine l x@("MSG", _, _) = processMsg x "STAT_BEGIN" l
 processLine l x@("STAT_BEGIN", _, _) = processStatBegin x "STAT" l
 processLine l x@("STAT", _, _) = processStat x "STAT" l
 

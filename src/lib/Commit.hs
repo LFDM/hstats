@@ -21,11 +21,11 @@ instance Eq Commit where
 
 createCommit :: String -> String -> String -> String -> [FileStat] -> Commit
 createCommit sha author date msg files = Commit { sha=sha
-                                            , author=author
-                                            , msg=msg
-                                            , date=date
-                                            , files=files
-                                            }
+                                                , author=author
+                                                , date=date
+                                                , msg=msg
+                                                , files=files
+                                                }
 
 getCommitAuthor :: Commit -> String
 getCommitAuthor = author
