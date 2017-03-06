@@ -24,6 +24,8 @@ import Categories
 import Printer as P
 import Util
 
+import Debug.Trace
+
 
 type GitLineData = (String, String, String, String, [FileStat])
 type State = String
@@ -62,6 +64,8 @@ printStats timeframe dir depth accuracy = do
   putStrLn ""
 
   let commits = parseGitOutput gitOutput
+  print $ length commits
+  print $ getCommitFiles $ head commits
   let contributors = collectContributors commits
   putStrLn $ P.join . toCommitterPanel . toComPanelArgs $ contributors
   putStrLn ""
@@ -122,7 +126,7 @@ toDirPanelArgs depth rootDir dir = zipWith merge paths stats
         merge p (_:xs) = p:xs
 
 parseGitOutput :: String -> [Commit]
-parseGitOutput = reverse . takeResult . processLines . lines
+parseGitOutput = reverse. takeResult . processLines . lines
   where takeResult (_, _, x) = x
 
 flushState :: GitState -> GitState
@@ -137,8 +141,7 @@ processLine :: Line -> GitState -> GitState
 processLine l x@("BEGIN", _, _) = processCommit x "AUTHOR" l
 processLine l x@("AUTHOR", _, _) = processAuthor x "DATE" l
 processLine l x@("DATE", _, _) = processDate x "MSG" l
-processLine l x@("MSG", _, _) = processMsg x "STAT_BEGIN" l
-processLine l x@("STAT_BEGIN", _, _) = processStatBegin x "STAT" l
+processLine l x@("MSG", _, _) = processMsg x "STAT" l
 processLine l x@("STAT", _, _) = processStat x "STAT" l
 
 processCommit :: GitState -> State -> Line -> GitState
@@ -162,12 +165,14 @@ processMsg x@(_, (sha, a, d, _, fs), r) ns l =
   where msg = match!!0!!1
         match = l =~ "^\\s+(.+)$"
 
-processStatBegin :: GitState -> State -> Line -> GitState
-processStatBegin x ns l = if startsEmpty then x else processStat x ns l
+processStat :: GitState -> State -> Line -> GitState
+processStat x ns l =
+  if startsEmpty then x else processStat' x ns l
   where startsEmpty = Prelude.null l || l =~ "^\\s+" :: Bool
 
-processStat :: GitState -> State -> Line -> GitState
-processStat x ns l = if Prelude.null match then flushState x else addStat x (match!!0)
+processStat' :: GitState -> State -> Line -> GitState
+processStat' x ns l =
+  if Prelude.null match then flushState x else addStat x (match!!0)
   where match = l =~ "^([0-9]+)\\s+([0-9]+)\\s+(.+)" :: [[String]] -- \\d instead of [0-9] ain't working
         addStat (_, (sha, author, date, m, fs), r) (_:a:d:p:_) =
           (ns, (sha, author, date, m, (createFileStat a d p):fs), r)
