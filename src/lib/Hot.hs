@@ -25,14 +25,14 @@ import Printer as P
 import Util
 
 
-type GitLineData = (String, String, String, [FileStat])
+type GitLineData = (String, String, String, String, [FileStat])
 type State = String
 type GitState = (State, GitLineData, [Commit])
 type Line = String
 
 filePanelPathLen = 64
 
-emptyLineData = ("", "", "", [])
+emptyLineData = ("", "", "", "", [])
 
 gitLog :: String -> String -> String -> IO String
 gitLog timeframe dir accuracy = readProcess cmd (concat [args, path]) []
@@ -76,6 +76,7 @@ printStats timeframe dir depth accuracy = do
 
   categories <- collectCategories commits
   putStrLn $ P.join . toCtgPanel . toCtgPanelArgs $ categories
+  putStrLn ""
 
   stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
@@ -125,34 +126,41 @@ parseGitOutput = reverse . takeResult . processLines . lines
   where takeResult (_, _, x) = x
 
 flushState :: GitState -> GitState
-flushState all@(s, d@(sha, _, _, _), res) =
+flushState all@(s, d@(sha, _, _, _, _), res) =
   if Prelude.null sha then all else ("BEGIN", emptyLineData, addRecord d)
-   where addRecord (s, a, d, f) = (createCommit s a d f):res
+   where addRecord (s, a, d, m, f) = (createCommit s a d m f):res
 
 processLines :: [Line] -> GitState
 processLines = Prelude.foldr processLine ("BEGIN", emptyLineData, [])
 
 processLine :: Line -> GitState -> GitState
 processLine l x@("BEGIN", _, _) = processCommit x "AUTHOR" l
-processLine l x@("AUTHOR", _, _) = processAuthor x "DATE" l
+processLine l x@("AUTHOR", _, _) = processAuthor x "MSG" l
+processLine l x@("MSG", _, _) = processMsg x "DATE" l
 processLine l x@("DATE", _, _) = processDate x "STAT_BEGIN" l
 processLine l x@("STAT_BEGIN", _, _) = processStatBegin x "STAT" l
 processLine l x@("STAT", _, _) = processStat x "STAT" l
 
 processCommit :: GitState -> State -> Line -> GitState
-processCommit a@(s, (_, author, date, fs), r) ns l =
-  if Prelude.null match then a else (ns, (match!!0!!1, author, date, fs), r)
+processCommit a@(s, (_, author, date, msg, fs), r) ns l =
+  if Prelude.null match then a else (ns, (match!!0!!1, author, date, msg, fs), r)
   where match = l =~ "^commit (.+)" :: [[String]]
 
 processAuthor :: GitState -> State -> Line -> GitState
-processAuthor a@(s, (sha, _, date, fs), r) ns l =
+processAuthor a@(s, (sha, _, date, msg, fs), r) ns l =
   -- this line can indicate a merge commit - we ignore these!
-  if Prelude.null match then a else (ns, (sha, match!!0!!1, date, fs), r)
+  if Prelude.null match then a else (ns, (sha, match!!0!!1, date, msg, fs), r)
   where match = (removeUnicode l) =~ "^Author:.*<(.+)>"
 
 processDate :: GitState -> State -> Line -> GitState
-processDate (s, (sha, author, _, fs), r) ns l = (ns, (sha, author, date, fs), r)
+processDate (s, (sha, author, _, msg, fs), r) ns l = (ns, (sha, author, date, msg, fs), r)
   where date = (l =~ "^Date:   (.+)")!!0!!1
+
+processMsg :: GitState -> State -> Line -> GitState
+processMsg x@(_, (sha, a, d, _, fs), r) ns l =
+  if Prelude.null match then x else (ns, (sha, a, d, trim msg, fs), r)
+  where msg = match!!0!!1
+        match = l =~ "^\\s+(.+)$"
 
 processStatBegin :: GitState -> State -> Line -> GitState
 processStatBegin x ns l = if startsEmpty then x else processStat x ns l
@@ -161,8 +169,8 @@ processStatBegin x ns l = if startsEmpty then x else processStat x ns l
 processStat :: GitState -> State -> Line -> GitState
 processStat x ns l = if Prelude.null match then flushState x else addStat x (match!!0)
   where match = l =~ "^([0-9]+)\\s+([0-9]+)\\s+(.+)" :: [[String]] -- \\d instead of [0-9] ain't working
-        addStat (_, (sha, author, date, fs), r) (_:a:d:p:_) =
-          (ns, (sha, author, date, (createFileStat a d p):fs), r)
+        addStat (_, (sha, author, date, m, fs), r) (_:a:d:p:_) =
+          (ns, (sha, author, date, m, (createFileStat a d p):fs), r)
 
 -------------------
 
