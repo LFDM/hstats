@@ -126,7 +126,7 @@ toDirPanelArgs depth rootDir dir = zipWith merge paths stats
         merge p (_:xs) = p:xs
 
 parseGitOutput :: String -> [Commit]
-parseGitOutput = reverse. takeResult . processLines . lines
+parseGitOutput = takeResult . processLines . reverse . lines
   where takeResult (_, _, x) = x
 
 flushState :: GitState -> GitState
