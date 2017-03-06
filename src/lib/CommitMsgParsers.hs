@@ -41,9 +41,8 @@ loadParsers = do
   return $ fromMaybe [] $ (Y.decode conf :: Maybe [ParserDef])
 
 findCategory :: [ParserDef] -> String -> String
-findCategory defs msg = maybe "other" name . List.find match $ defs
+findCategory defs msg = maybe unknownCategory name . List.find match $ defs
   where match p = msg =~ matcher p :: Bool
-        toString = fromMaybe unknownCategory
 
 getParserName :: ParserDef -> String
 getParserName = name
