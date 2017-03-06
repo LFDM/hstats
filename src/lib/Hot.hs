@@ -65,26 +65,26 @@ printStats timeframe dir depth accuracy = do
 
   let commits = parseGitOutput gitOutput
   let contributors = collectContributors commits
-  putStrLn $ P.join . toCommitterPanel . toComPanelArgs $ contributors
-  putStrLn ""
+  printPanel $ toCommitterPanel . toComPanelArgs $ contributors
 
   let files = collectFiles commits
-  putStrLn $ P.join . toFilesPanel . toFPanelArgs fullDir $ files
-  putStrLn ""
+  printPanel $ toFilesPanel . toFPanelArgs fullDir $ files
 
   let dir = collectDirs fullDir files
-  putStrLn $ P.join . toDirPanel . toDirPanelArgs depth fullDir $ dir
-  putStrLn ""
+  printPanel $ toDirPanel . toDirPanelArgs depth fullDir $ dir
 
   categories <- collectCategories commits
-  putStrLn $ P.join . toCtgPanel . toCtgPanelArgs $ categories
-  putStrLn ""
+  printPanel $ toCtgPanel . toCtgPanelArgs $ categories
 
   stop <- getCurrentTime
   putStrLn $ "Took " ++ show (diffUTCTime stop start)
 
   return ()
 
+printPanel :: [String] -> IO ()
+printPanel ls = do
+  putStrLn $ P.join ls
+  putStrLn ""
 
 toCommitterPanel :: [[String]] -> [String]
 toCommitterPanel rows = P.toPanel dimensions (header:rows)
